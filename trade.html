@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>交易计划 — 紫东投研</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <script src="app.js" defer></script>
+  <style>
+    .stock-header {
+      background: var(--white, #fff);
+      border-radius: var(--radius, 12px);
+      box-shadow: var(--card-shadow, 0 2px 12px rgba(0,0,0,0.08));
+      padding: 28px 32px;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+    .stock-header-logo {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      flex-shrink: 0;
+    }
+    .stock-header-logo.tsla { background: linear-gradient(135deg, #cc0000 0%, #ff4444 100%); }
+    .stock-header-logo.nvda { background: linear-gradient(135deg, #76b900 0%, #a3e635 100%); }
+    .stock-header-info { flex: 1; }
+    .stock-header-ticker { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 2px; }
+    .stock-header-name { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1.2; }
+    .stock-header-price { text-align: right; flex-shrink: 0; }
+    .stock-header-price .price { font-size: 28px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
+    .stock-header-price .change { font-size: 15px; font-weight: 700; margin-top: 2px; }
+    .stock-header-price .change.up { color: #16a34a; }
+    .stock-header-price .change.dn { color: #dc2626; }
+    .stock-header-price .vol { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .trade-empty {
+      text-align: center;
+      padding: 60px 24px;
+      color: var(--text-muted);
+    }
+    .trade-empty .icon { font-size: 48px; margin-bottom: 16px; }
+    .trade-empty p { font-size: 15px; }
+    .trade-notice {
+      background: #fff7f0;
+      border: 1px solid #fed7aa;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #92400e;
+      margin-bottom: 24px;
+    }
+    .featured-article-content {
+      background: var(--white, #fff);
+      border-radius: var(--radius, 12px);
+      box-shadow: var(--card-shadow, 0 2px 12px rgba(0,0,0,0.08));
+      padding: 32px;
+      margin-bottom: 32px;
+      overflow: auto;
+    }
+    .featured-article-content h1,
+    .featured-article-content h2,
+    .featured-article-content h3 {
+      font-family: 'Noto Sans SC', sans-serif;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-logo-zd">紫<span>东投研</span></div>
+    <div class="nav-links" id="nav-links"></div>
+    <div id="nav-user-info"></div>
+    <div class="nav-actions" id="nav-actions"></div>
+  </div>
+</nav>
+
+<div class="ticker-bar" id="ticker-bar"></div>
+
+<main class="page">
+
+  <div class="section-head" style="margin-bottom:6px;">
+    <div>
+      <h2 style="margin-bottom:4px;">每日交易计划</h2>
+      <p style="font-size:14px;color:var(--text-muted);margin:0;">交易大师 · 实时交易级别分析</p>
+    </div>
+  </div>
+
+  <div style="height:24px;"></div>
+
+  <div class="trade-notice">
+    ⏰ 交易计划每个交易日下午5时（香港时间）发布
+  </div>
+
+  <div class="admin-tabs" id="trade-tabs">
+    <div class="admin-tab active" data-ticker="TSLA">特斯拉 ($TSLA)</div>
+    <div class="admin-tab" data-ticker="NVDA">英伟达 ($NVDA)</div>
+  </div>
+
+  <div id="trade-content" style="margin-top:24px;">
+    <div class="loading-center"><div class="spinner"></div></div>
+  </div>
+
+</main>
+
+<footer class="footer">
+  © 2026 紫东投研 · <a href="#">隐私政策</a> · <a href="#">使用条款</a>
+</footer>
+
+<script>
+const API = "https://moomooinsights-production.up.railway.app";
+
+let activeTicker = "TSLA";
+let marketsCache = null;
+
+const STOCK_META = {
+  TSLA: {
+    nameZH: "特斯拉",
+    name: "Tesla, Inc.",
+    logoClass: "tsla",
+    emoji: "🚗",
+    descriptionZH: "电动汽车、储能及自动驾驶领域领头羊。高波动性，情绪驱动型标的。",
+  },
+  NVDA: {
+    nameZH: "英伟达",
+    name: "NVIDIA Corporation",
+    logoClass: "nvda",
+    emoji: "🟢",
+    descriptionZH: "AI基础设施、GPU及数据中心核心标的，AI时代最大受益者之一。",
+  },
+};
+
+function formatDateZH(d) {
+  if (!d) return "";
+  return new Date(d).toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" });
+}
+
+function translateAuthor(author) {
+  const map = {
+    "Moomoo Insights": "投研团队",
+    "Trader Moo": "交易大师",
+  };
+  return map[author] || author || "交易大师";
+}
+
+function articleCardHTML(a) {
+  const title = a.title_zh_cn || a.title;
+  const excerpt = a.excerpt_zh_cn || a.excerpt || "";
+  const meta = STOCK_META[a.category] || {};
+  return `
+    <div class="article-card" onclick="location.href='article.html?id=${a.id}'">
+      <div class="article-card-img-placeholder">${meta.emoji || "📊"}</div>
+      <div class="article-card-body">
+        <div class="article-card-category">${meta.nameZH || a.category}</div>
+        <div class="article-card-title">${title}</div>
+        <div class="article-card-excerpt">${excerpt}</div>
+        <div class="article-card-meta">
+          <span>${translateAuthor(a.author)}</span>
+          <span class="dot">·</span>
+          <span>${formatDateZH(a.created_at)}</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+document.querySelectorAll("#trade-tabs .admin-tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll("#trade-tabs .admin-tab").forEach(t => t.classList.remove("active"));
+    tab.classList.add("active");
+    activeTicker = tab.dataset.ticker;
+    renderTrade();
+  });
+});
+
+async function loadMarketsOnce() {
+  if (marketsCache) return marketsCache;
+  try {
+    marketsCache = await fetch(`${API}/api/markets`).then(r => r.json());
+  } catch {
+    marketsCache = { movers: [] };
+  }
+  return marketsCache;
+}
+
+async function renderTrade() {
+  const container = document.getElementById("trade-content");
+  container.innerHTML = `<div class="loading-center"><div class="spinner"></div></div>`;
+
+  const [markets, articles] = await Promise.all([
+    loadMarketsOnce(),
+    fetch(`${API}/api/articles?category=${encodeURIComponent(activeTicker)}`).then(r => r.json()).catch(() => []),
+  ]);
+
+  const meta = STOCK_META[activeTicker];
+  const mover = (markets.movers || []).find(m => m.ticker === activeTicker);
+
+  let priceHTML;
+  if (mover) {
+    const cls = mover.change_pct >= 0 ? "up" : "dn";
+    const sign = mover.change_pct >= 0 ? "+" : "";
+    const vol = mover.volume ? `成交量 ${(mover.volume / 1e6).toFixed(1)}M` : "";
+    priceHTML = `
+      <div class="price">$${mover.price.toFixed(2)}</div>
+      <div class="change ${cls}">${sign}${mover.change_pct.toFixed(2)}%</div>
+      ${vol ? `<div class="vol">${vol}</div>` : ""}
+    `;
+  } else {
+    priceHTML = `<div class="price" style="font-size:16px;color:var(--text-muted);">价格暂不可用</div>`;
+  }
+
+  let html = `
+    <div class="stock-header">
+      <div class="stock-header-logo ${meta.logoClass}">${meta.emoji}</div>
+      <div class="stock-header-info">
+        <div class="stock-header-ticker">${activeTicker}</div>
+        <div class="stock-header-name">${meta.nameZH} · ${meta.name}</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">${meta.descriptionZH}</div>
+      </div>
+      <div class="stock-header-price">${priceHTML}</div>
+    </div>
+  `;
+
+  if (!articles.length) {
+    html += `
+      <div class="trade-empty">
+        <div class="icon">${meta.emoji}</div>
+        <p>暂无 ${activeTicker} 交易计划。<br>
+          <span style="font-size:13px;">每个交易日下午5时（香港时间）更新。</span>
+        </p>
+      </div>
+    `;
+    container.innerHTML = html;
+    return;
+  }
+
+  // Featured: most recent article — render content_html inline
+  const featured = articles[0];
+  const rest = articles.slice(1);
+
+  html += `<div class="section-head"><h2>最新交易计划</h2></div>`;
+
+  // Try to fetch full content for inline rendering
+  try {
+    const fullArticle = await fetch(`${API}/api/articles/${featured.id}`).then(r => r.json());
+    if (fullArticle && fullArticle.content_html) {
+      html += `<div class="featured-article-content">${fullArticle.content_html}</div>`;
+    } else {
+      // Fallback to hero card
+      const heroTitle = featured.title_zh_cn || featured.title;
+      const heroExcerpt = featured.excerpt_zh_cn || featured.excerpt || "";
+      html += `
+        <div class="hero-article" onclick="location.href='article.html?id=${featured.id}'">
+          <div class="hero-article-img">${meta.emoji}</div>
+          <div class="hero-article-body">
+            <span class="hero-tag">${meta.nameZH}</span>
+            <h1 class="hero-title">${heroTitle}</h1>
+            <p class="hero-excerpt">${heroExcerpt}</p>
+            <div class="hero-meta">${translateAuthor(featured.author)} · ${formatDateZH(featured.created_at)}</div>
+          </div>
+        </div>
+      `;
+    }
+  } catch {
+    const heroTitle = featured.title_zh_cn || featured.title;
+    const heroExcerpt = featured.excerpt_zh_cn || featured.excerpt || "";
+    html += `
+      <div class="hero-article" onclick="location.href='article.html?id=${featured.id}'">
+        <div class="hero-article-img">${meta.emoji}</div>
+        <div class="hero-article-body">
+          <span class="hero-tag">${meta.nameZH}</span>
+          <h1 class="hero-title">${heroTitle}</h1>
+          <p class="hero-excerpt">${heroExcerpt}</p>
+          <div class="hero-meta">${translateAuthor(featured.author)} · ${formatDateZH(featured.created_at)}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  if (rest.length) {
+    html += `
+      <div class="section-head" style="margin-top:32px;">
+        <h2>历史交易计划</h2>
+      </div>
+      <div class="grid-3">${rest.map(articleCardHTML).join("")}</div>
+    `;
+  }
+
+  container.innerHTML = html;
+}
+
+document.addEventListener("DOMContentLoaded", renderTrade);
+</script>
+</body>
+</html>

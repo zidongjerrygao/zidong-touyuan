@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>紫东投研 — 专业投研平台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <script src="app.js" defer></script>
+  <style>
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--orange, #e03c2f);
+      margin-bottom: 6px;
+    }
+    .news-section { margin-bottom: 48px; }
+    .section-divider { border: none; border-top: 1px solid var(--border, #e5e7eb); margin: 0 0 32px; }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-logo-zd">紫<span>东投研</span></div>
+    <div class="nav-links" id="nav-links"></div>
+    <div id="nav-user-info"></div>
+    <div class="nav-actions" id="nav-actions"></div>
+  </div>
+</nav>
+
+<div class="ticker-bar" id="ticker-bar"></div>
+
+<main class="page" id="main">
+  <div class="loading-center"><div class="spinner"></div></div>
+</main>
+
+<footer class="footer">
+  © 2026 紫东投研 · <a href="#">隐私政策</a> · <a href="#">使用条款</a>
+</footer>
+
+<script>
+const API = "https://moomooinsights-production.up.railway.app";
+
+async function zdFetch(path) {
+  const res = await fetch(`${API}${path}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+function translateAuthor(author) {
+  const map = {
+    "Moomoo Insights": "投研团队",
+    "Trader Moo": "交易大师",
+    "Madison": "麦迪逊",
+    "Cembalest": "策略师",
+    "DBS CIO": "星展首席投资官",
+  };
+  return map[author] || author || "投研团队";
+}
+
+function translateCategory(cat) {
+  const map = {
+    "Daily Brief": "每日简报",
+    "Earnings": "财报速递",
+    "Market Analysis": "市场深度研究",
+    "Macro": "宏观策略",
+    "Equity": "股票策略",
+    "Credit": "信用策略",
+    "TSLA": "特斯拉",
+    "NVDA": "英伟达",
+  };
+  return map[cat] || cat || "投研";
+}
+
+function categoryEmoji(cat) {
+  const map = {
+    "Market Analysis": "📊", "Earnings": "💰", "Economy": "🌐",
+    "Tech": "💻", "Energy": "⚡", "Healthcare": "🏥",
+    "Finance": "🏦", "SG Market": "🇸🇬", "US Market": "🇺🇸",
+    "Macro": "🌐", "Equity": "📈", "Credit": "💳",
+    "TSLA": "🚗", "NVDA": "🟢", "Daily Brief": "📰",
+  };
+  return map[cat] || "📰";
+}
+
+function formatDateZH(d) {
+  if (!d) return "";
+  const dt = new Date(d);
+  return dt.toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" });
+}
+
+function articleCardHTML(a) {
+  const title = a.title_zh_cn || a.title;
+  const excerpt = a.excerpt_zh_cn || a.excerpt || "";
+  const author = translateAuthor(a.author);
+  const category = translateCategory(a.category);
+  return `
+    <div class="article-card" onclick="location.href='article.html?id=${a.id}'">
+      <div class="article-card-img-placeholder">${categoryEmoji(a.category)}</div>
+      <div class="article-card-body">
+        <div class="article-card-category">${category}</div>
+        <div class="article-card-title">${title}</div>
+        <div class="article-card-excerpt">${excerpt}</div>
+        <div class="article-card-meta">
+          <span>${author}</span>
+          <span class="dot">·</span>
+          <span>${formatDateZH(a.created_at)}</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function loadPage() {
+  try {
+    const articles = await zdFetch("/api/articles");
+    const main = document.getElementById("main");
+
+    if (!articles.length) {
+      main.innerHTML = `<div class="empty-state"><div class="icon">📰</div><p>暂无文章，请稍后再来。</p></div>`;
+      return;
+    }
+
+    const dailyBriefs    = articles.filter(a => a.category === "Daily Brief");
+    const earningsArts   = articles.filter(a => a.category === "Earnings");
+    const marketAnalysis = articles.filter(a => ["Market Analysis","Macro","Equity","Credit"].includes(a.category));
+    const tradePlans     = articles.filter(a => ["TSLA","NVDA"].includes(a.category));
+
+    // Featured = most recently published across dailyBriefs, earningsArts, marketAnalysis
+    const candidates = [...dailyBriefs, ...earningsArts, ...marketAnalysis];
+    let featured = null;
+    if (candidates.length) {
+      featured = candidates.reduce((a, b) =>
+        new Date(a.created_at) > new Date(b.created_at) ? a : b
+      );
+    } else if (articles.length) {
+      featured = articles[0];
+    }
+
+    let html = "";
+
+    // Hero
+    if (featured) {
+      const heroTitle = featured.title_zh_cn || featured.title;
+      const heroExcerpt = featured.excerpt_zh_cn || featured.excerpt || "";
+      html += `
+        <div class="hero-article" onclick="location.href='article.html?id=${featured.id}'">
+          <div class="hero-article-img">${categoryEmoji(featured.category)}</div>
+          <div class="hero-article-body">
+            <span class="hero-tag">${translateCategory(featured.category)}</span>
+            <h1 class="hero-title">${heroTitle}</h1>
+            <p class="hero-excerpt">${heroExcerpt}</p>
+            <div class="hero-meta">${translateAuthor(featured.author)} · ${formatDateZH(featured.created_at)}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ── Section 1: 每日简报 ──────────────────────────────────────────
+    html += `<hr class="section-divider">`;
+    html += `<div class="news-section">`;
+    html += `<div class="section-label">Daily Brief</div>`;
+    html += `<div class="section-head" style="margin-bottom:20px;"><h2>每日简报</h2></div>`;
+    if (dailyBriefs.length) {
+      const briefs = dailyBriefs.slice(0, 6).filter(a => !featured || a.id !== featured.id);
+      const toRender = briefs.length ? briefs : dailyBriefs.slice(0, 6);
+      html += `<div class="grid-3">${toRender.map(articleCardHTML).join("")}</div>`;
+    } else {
+      html += `<div class="empty-state" style="padding:24px 0;"><p>每日简报将于每个交易日上午 8:30（香港时间）发布。</p></div>`;
+    }
+    html += `</div>`;
+
+    // ── Section 2: 财报速递 ────────────────────────────────────────
+    html += `<hr class="section-divider">`;
+    html += `<div class="news-section">`;
+    html += `<div class="section-label">Earnings</div>`;
+    html += `<div class="section-head" style="margin-bottom:20px;"><h2>财报速递</h2></div>`;
+    if (earningsArts.length) {
+      const earnings = earningsArts.slice(0, 6).filter(a => !featured || a.id !== featured.id);
+      const toRender = earnings.length ? earnings : earningsArts.slice(0, 6);
+      html += `<div class="grid-3">${toRender.map(articleCardHTML).join("")}</div>`;
+    } else {
+      html += `<div class="empty-state" style="padding:24px 0;"><p>财报预告与点评将在每个财报季自动更新。</p></div>`;
+    }
+    html += `</div>`;
+
+    // ── Section 3: 市场深度研究 ────────────────────────────────────
+    html += `<hr class="section-divider">`;
+    html += `<div class="news-section">`;
+    html += `<div class="section-label">Market Analysis</div>`;
+    html += `<div class="section-head" style="margin-bottom:20px;"><h2>市场深度研究</h2></div>`;
+    if (marketAnalysis.length) {
+      const ma = marketAnalysis.slice(0, 6).filter(a => !featured || a.id !== featured.id);
+      const toRender = ma.length ? ma : marketAnalysis.slice(0, 6);
+      html += `<div class="grid-3">${toRender.map(articleCardHTML).join("")}</div>`;
+    } else {
+      html += `<div class="empty-state" style="padding:24px 0;"><p>深度主题研究每周四、五发布。</p></div>`;
+    }
+    html += `</div>`;
+
+    // ── Section 4: 交易计划 ────────────────────────────────────────
+    html += `<hr class="section-divider">`;
+    html += `<div class="news-section">`;
+    html += `<div class="section-label">Trade Plans</div>`;
+    html += `<div class="section-head" style="margin-bottom:20px;"><h2>交易计划</h2></div>`;
+    if (tradePlans.length) {
+      html += `<div class="grid-3">${tradePlans.slice(0, 6).map(articleCardHTML).join("")}</div>`;
+    } else {
+      html += `<div class="empty-state" style="padding:24px 0;"><p>每个交易日下午5时（香港时间）发布 TSLA 及 NVDA 交易计划。</p></div>`;
+    }
+    html += `</div>`;
+
+    main.innerHTML = html;
+  } catch (e) {
+    document.getElementById("main").innerHTML = `
+      <div class="empty-state">
+        <div class="icon">⚠️</div>
+        <p>无法加载文章，请检查网络连接。<br><small>${e.message}</small></p>
+      </div>`;
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Override renderNav for Zidong branding if app.js is loaded
+  loadPage();
+});
+</script>
+</body>
+</html>

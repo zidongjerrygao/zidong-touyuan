@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>登录 — 紫东投研</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #C41230 0%, #6B0A1A 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Noto Sans SC', sans-serif;
+      padding: 24px;
+    }
+
+    .auth-page-logo {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .auth-page-logo .logo-text {
+      font-size: 36px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 0.02em;
+    }
+    .auth-page-logo .logo-text .logo-zi {
+      color: #ffd700;
+    }
+    .auth-page-logo .logo-sub {
+      font-size: 14px;
+      color: rgba(255,255,255,0.75);
+      margin-top: 6px;
+      letter-spacing: 0.08em;
+    }
+
+    .auth-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      width: 100%;
+      max-width: 420px;
+      padding: 36px 40px;
+    }
+
+    .auth-tabs {
+      display: flex;
+      border-bottom: 2px solid #f3f4f6;
+      margin-bottom: 28px;
+    }
+    .auth-tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px 0;
+      font-size: 15px;
+      font-weight: 600;
+      color: #9ca3af;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: color 0.15s, border-color 0.15s;
+      user-select: none;
+    }
+    .auth-tab.active {
+      color: #C41230;
+      border-bottom-color: #C41230;
+    }
+
+    .auth-form { display: none; }
+    .auth-form.active { display: block; }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: 'Noto Sans SC', sans-serif;
+      color: #111827;
+      background: #fafafa;
+      transition: border-color 0.15s, background 0.15s;
+      outline: none;
+    }
+    .form-group input:focus {
+      border-color: #C41230;
+      background: #fff;
+    }
+    .form-group input::placeholder { color: #d1d5db; }
+
+    .btn-auth {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, #C41230 0%, #a30e28 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: 'Noto Sans SC', sans-serif;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      margin-top: 4px;
+    }
+    .btn-auth:hover { opacity: 0.92; }
+    .btn-auth:active { transform: scale(0.99); }
+    .btn-auth:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .auth-error {
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: #fef2f4;
+      border: 1px solid #fca5a5;
+      border-radius: 7px;
+      color: #b91c1c;
+      font-size: 13px;
+      display: none;
+    }
+    .auth-error.visible { display: block; }
+
+    .auth-success {
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: #f0fdf4;
+      border: 1px solid #86efac;
+      border-radius: 7px;
+      color: #15803d;
+      font-size: 13px;
+      display: none;
+    }
+    .auth-success.visible { display: block; }
+
+    .auth-footer-text {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 12px;
+      color: #9ca3af;
+      line-height: 1.6;
+    }
+    .auth-footer-text a { color: #C41230; text-decoration: none; }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 20px 0;
+      color: #d1d5db;
+      font-size: 12px;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e5e7eb;
+    }
+
+    .redirect-notice {
+      text-align: center;
+      font-size: 13px;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 16px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 8px;
+      padding: 10px 16px;
+      max-width: 420px;
+    }
+
+    @media (max-width: 480px) {
+      .auth-card { padding: 28px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="auth-page-logo">
+    <div class="logo-text"><span class="logo-zi">紫</span>东投研</div>
+    <div class="logo-sub">专业投研平台 · 洞察全球市场</div>
+  </div>
+
+  <div id="redirect-notice" class="redirect-notice" style="display:none;"></div>
+
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tab-login" onclick="switchTab('login')">登录</div>
+      <div class="auth-tab" id="tab-register" onclick="switchTab('register')">注册</div>
+    </div>
+
+    <!-- Login Form -->
+    <form class="auth-form active" id="form-login" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label for="login-email">邮箱地址</label>
+        <input type="email" id="login-email" placeholder="请输入邮箱" autocomplete="email" required />
+      </div>
+      <div class="form-group">
+        <label for="login-password">密码</label>
+        <input type="password" id="login-password" placeholder="请输入密码" autocomplete="current-password" required />
+      </div>
+      <button type="submit" class="btn-auth" id="btn-login">登录</button>
+      <div class="auth-error" id="login-error"></div>
+    </form>
+
+    <!-- Register Form -->
+    <form class="auth-form" id="form-register" onsubmit="handleRegister(event)">
+      <div class="form-group">
+        <label for="reg-email">邮箱地址</label>
+        <input type="email" id="reg-email" placeholder="请输入邮箱" autocomplete="email" required />
+      </div>
+      <div class="form-group">
+        <label for="reg-name">显示名称</label>
+        <input type="text" id="reg-name" placeholder="您的昵称" autocomplete="nickname" required />
+      </div>
+      <div class="form-group">
+        <label for="reg-password">密码</label>
+        <input type="password" id="reg-password" placeholder="设置密码（至少8位）" autocomplete="new-password" required minlength="8" />
+      </div>
+      <button type="submit" class="btn-auth" id="btn-register">注册</button>
+      <div class="auth-error" id="register-error"></div>
+      <div class="auth-success" id="register-success"></div>
+    </form>
+
+    <div class="auth-footer-text">
+      继续即表示您同意 <a href="#">使用条款</a> 和 <a href="#">隐私政策</a>
+    </div>
+  </div>
+
+<script>
+  const API = "https://moomooinsights-production.up.railway.app";
+
+  // Show redirect notice if any
+  const params = new URLSearchParams(window.location.search);
+  const notice = params.get('notice');
+  if (notice) {
+    const el = document.getElementById('redirect-notice');
+    el.textContent = decodeURIComponent(notice);
+    el.style.display = 'block';
+  }
+
+  // Switch tab
+  function switchTab(tab) {
+    ['login','register'].forEach(t => {
+      document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+      document.getElementById(`form-${t}`).classList.toggle('active', t === tab);
+    });
+    clearErrors();
+  }
+
+  function clearErrors() {
+    ['login-error','register-error','register-success'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.classList.remove('visible'); el.textContent = ''; }
+    });
+  }
+
+  function showError(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.classList.add('visible');
+  }
+
+  function showSuccess(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.classList.add('visible');
+  }
+
+  function setLoading(btnId, loading, text) {
+    const btn = document.getElementById(btnId);
+    btn.disabled = loading;
+    btn.textContent = loading ? '请稍候…' : text;
+  }
+
+  function getRedirectTarget() {
+    const redir = params.get('redirect');
+    return redir ? decodeURIComponent(redir) : 'index.html';
+  }
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    clearErrors();
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    setLoading('btn-login', true, '登录');
+
+    try {
+      const res = await fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || data.message || '登录失败');
+
+      const token = data.access_token || data.token || '';
+      const user = data.user || { email };
+      localStorage.setItem('zidong_token', token);
+      localStorage.setItem('zidong_user', JSON.stringify(user));
+
+      window.location.href = getRedirectTarget();
+    } catch (err) {
+      showError('login-error', err.message === 'Failed to fetch'
+        ? '网络连接失败，请检查网络后重试'
+        : (err.message || '邮箱或密码错误，请重试'));
+      setLoading('btn-login', false, '登录');
+    }
+  }
+
+  async function handleRegister(e) {
+    e.preventDefault();
+    clearErrors();
+    const email = document.getElementById('reg-email').value.trim();
+    const display_name = document.getElementById('reg-name').value.trim();
+    const password = document.getElementById('reg-password').value;
+    setLoading('btn-register', true, '注册');
+
+    try {
+      const res = await fetch(`${API}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, display_name })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || data.message || '注册失败');
+
+      const token = data.access_token || data.token || '';
+      const user = data.user || { email, display_name };
+      if (token) {
+        localStorage.setItem('zidong_token', token);
+        localStorage.setItem('zidong_user', JSON.stringify(user));
+        window.location.href = getRedirectTarget();
+      } else {
+        showSuccess('register-success', '注册成功！请登录您的账号。');
+        setTimeout(() => switchTab('login'), 1500);
+      }
+    } catch (err) {
+      const msg = err.message || '';
+      let friendly = '注册失败，邮箱可能已被使用';
+      if (msg.toLowerCase().includes('exist') || msg.toLowerCase().includes('already')) {
+        friendly = '该邮箱已注册，请直接登录';
+      } else if (msg === 'Failed to fetch') {
+        friendly = '网络连接失败，请检查网络后重试';
+      } else if (msg) {
+        friendly = msg;
+      }
+      showError('register-error', friendly);
+      setLoading('btn-register', false, '注册');
+    }
+  }
+
+  // If already logged in, redirect
+  const existingToken = localStorage.getItem('zidong_token');
+  if (existingToken) {
+    window.location.href = getRedirectTarget();
+  }
+</script>
+</body>
+</html>

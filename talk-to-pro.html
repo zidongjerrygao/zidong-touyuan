@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>专家对话 — 紫东投研</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <script src="app.js" defer></script>
+  <style>
+    .pro-layout {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 112px);
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 24px 16px 0;
+    }
+
+    .pro-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+      flex-shrink: 0;
+    }
+    .pro-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--navy, #1a2332);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .pro-header-text h2 {
+      margin: 0 0 2px;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .pro-header-text p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .pro-status {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #16a34a;
+      margin-right: 5px;
+    }
+
+    .chat-window {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 8px 0 16px;
+      scroll-behavior: smooth;
+    }
+
+    .msg {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      max-width: 82%;
+    }
+    .msg.user {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+    .msg-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .msg.bot .msg-avatar  { background: var(--navy, #1a2332); color: #fff; }
+    .msg.user .msg-avatar { background: var(--orange, #e03c2f); color: #fff; }
+
+    .msg-bubble {
+      padding: 12px 16px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.65;
+      color: var(--text);
+    }
+    .msg.bot .msg-bubble {
+      background: #fff;
+      border: 1px solid var(--border, #e5e7eb);
+      border-top-left-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .msg.user .msg-bubble {
+      background: var(--orange, #e03c2f);
+      color: #fff;
+      border-top-right-radius: 4px;
+    }
+
+    .msg-bubble p { margin: 0 0 10px; }
+    .msg-bubble p:last-child { margin-bottom: 0; }
+
+    .typing-dots span {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--text-muted, #9ca3af);
+      margin: 0 2px;
+      animation: bounce 1.2s infinite ease-in-out;
+    }
+    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0); }
+      40%           { transform: translateY(-6px); }
+    }
+
+    .chat-input-bar {
+      flex-shrink: 0;
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      padding: 12px 0 20px;
+      border-top: 1px solid var(--border, #e5e7eb);
+      background: var(--bg, #f8f9fa);
+    }
+    .chat-input-bar textarea {
+      flex: 1;
+      resize: none;
+      border: 1px solid var(--border, #e5e7eb);
+      border-radius: var(--radius-sm, 8px);
+      padding: 10px 14px;
+      font-size: 14px;
+      font-family: 'Noto Sans SC', sans-serif;
+      line-height: 1.5;
+      color: var(--text);
+      background: #fff;
+      max-height: 140px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .chat-input-bar textarea:focus { border-color: var(--orange, #e03c2f); }
+    .chat-input-bar textarea::placeholder { color: var(--text-muted, #9ca3af); }
+
+    #send-btn {
+      flex-shrink: 0;
+      padding: 0 18px;
+      height: 42px;
+      border-radius: 21px;
+      background: var(--orange, #e03c2f);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      font-family: 'Noto Sans SC', sans-serif;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+    }
+    #send-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .suggestion-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-shrink: 0;
+    }
+    .chip {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border, #e5e7eb);
+      background: #fff;
+      font-size: 13px;
+      color: var(--text);
+      cursor: pointer;
+      font-family: 'Noto Sans SC', sans-serif;
+      transition: border-color 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .chip:hover { border-color: var(--orange, #e03c2f); color: var(--orange, #e03c2f); }
+
+    .disclaimer {
+      font-size: 11px;
+      color: var(--text-muted, #9ca3af);
+      text-align: center;
+      padding-bottom: 8px;
+      flex-shrink: 0;
+      line-height: 1.5;
+    }
+
+    .mode-toggle {
+      display: flex;
+      gap: 0;
+      background: var(--bg-card, #f1f5f9);
+      border-radius: 10px;
+      padding: 3px;
+      flex-shrink: 0;
+      margin-bottom: 16px;
+      width: fit-content;
+    }
+    .mode-btn {
+      padding: 7px 18px;
+      border-radius: 8px;
+      border: none;
+      background: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-muted, #9ca3af);
+      font-family: 'Noto Sans SC', sans-serif;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .mode-btn.active {
+      background: #fff;
+      color: var(--orange, #e03c2f);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+
+    .online-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #16a34a;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-logo-zd">紫<span>东投研</span></div>
+    <div class="nav-links" id="nav-links"></div>
+    <div id="nav-user-info"></div>
+    <div class="nav-actions" id="nav-actions"></div>
+  </div>
+</nav>
+
+<div class="ticker-bar" id="ticker-bar"></div>
+
+<div class="pro-layout">
+
+  <div class="pro-header">
+    <div class="pro-avatar" id="pro-avatar">📊</div>
+    <div class="pro-header-text">
+      <h2>专家对话</h2>
+      <p><span class="online-dot"></span><span id="pro-subtitle">● 实时在线</span></p>
+    </div>
+  </div>
+
+  <div class="mode-toggle">
+    <button class="mode-btn active" id="mode-cembalest" onclick="setMode('cembalest', this)">📈 华尔街分析师</button>
+    <button class="mode-btn" id="mode-dbs" onclick="setMode('dbs', this)">🌏 专业策略师</button>
+  </div>
+
+  <div class="suggestion-chips" id="chips"></div>
+
+  <div class="chat-window" id="chat-window">
+    <div class="msg bot" id="welcome-msg">
+      <div class="msg-avatar">📊</div>
+      <div class="msg-bubble">
+        <p id="welcome-text">您好！我是紫东智析，以华尔街风格为您提供市场分析。请问您想了解什么市场动态？</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="chat-input-bar">
+    <textarea id="msg-input" rows="1" placeholder="向紫东智析提问…" maxlength="2000"></textarea>
+    <button id="send-btn" onclick="sendMessage()">发送</button>
+  </div>
+
+  <p class="disclaimer">
+    紫东投研仅供参考，不构成投资建议。期权交易存在重大亏损风险。请咨询持牌财务顾问。
+  </p>
+
+</div>
+
+<script>
+const API = "https://moomooinsights-production.up.railway.app";
+
+const chatWindow = document.getElementById("chat-window");
+const msgInput   = document.getElementById("msg-input");
+const sendBtn    = document.getElementById("send-btn");
+
+let currentMode = "cembalest";
+const history = [];
+
+const MODES = {
+  cembalest: {
+    avatar: "📊",
+    botName: "紫东智析",
+    welcome: "您好！我是紫东智析，以华尔街风格为您提供市场分析。请问您想了解什么市场动态？",
+    chips: [
+      "今天市场怎么样？",
+      "NVDA最新动态？",
+      "美联储政策走向？",
+      "现在应该买入还是卖出？",
+    ],
+  },
+  dbs: {
+    avatar: "🌏",
+    botName: "紫东智析",
+    welcome: "您好！我是紫东智析，以亚洲投资视角为您提供策略建议。有什么投资问题需要探讨？",
+    chips: [
+      "亚洲市场前景如何？",
+      "中港股市机遇？",
+      "哑铃策略如何配置？",
+      "AI板块的结构性机会？",
+    ],
+  },
+};
+
+function setMode(mode, btn) {
+  currentMode = mode;
+  document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  const cfg = MODES[mode];
+  document.getElementById("pro-avatar").textContent = cfg.avatar;
+  renderChips();
+  // Update welcome message
+  const welcome = document.getElementById("welcome-msg");
+  if (welcome) {
+    welcome.querySelector(".msg-avatar").textContent = cfg.avatar;
+    const welcomeText = welcome.querySelector(".msg-bubble");
+    if (welcomeText) welcomeText.innerHTML = formatBotText(cfg.welcome);
+  }
+  // Clear conversation history on mode switch
+  history.length = 0;
+}
+
+function renderChips() {
+  const chipsEl = document.getElementById("chips");
+  const cfg = MODES[currentMode];
+  chipsEl.style.display = "";
+  chipsEl.innerHTML = cfg.chips.map(c =>
+    `<button class="chip" onclick="sendChip(this)">${c}</button>`
+  ).join("");
+}
+
+// Init chips on load
+renderChips();
+
+msgInput.addEventListener("input", () => {
+  msgInput.style.height = "auto";
+  msgInput.style.height = Math.min(msgInput.scrollHeight, 140) + "px";
+});
+
+msgInput.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+function sendChip(el) {
+  msgInput.value = el.textContent;
+  document.getElementById("chips").style.display = "none";
+  sendMessage();
+}
+
+function scrollBottom() {
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+function appendMsg(role, text) {
+  const isBot = role === "bot";
+  const avatar = isBot ? MODES[currentMode].avatar : "👤";
+  const div = document.createElement("div");
+  div.className = `msg ${isBot ? "bot" : "user"}`;
+  div.innerHTML = `
+    <div class="msg-avatar">${avatar}</div>
+    <div class="msg-bubble">${isBot ? formatBotText(text) : escHtml(text)}</div>
+  `;
+  chatWindow.appendChild(div);
+  scrollBottom();
+  return div;
+}
+
+function showTyping() {
+  const div = document.createElement("div");
+  div.className = "msg bot";
+  div.id = "typing-indicator";
+  div.innerHTML = `
+    <div class="msg-avatar">${MODES[currentMode].avatar}</div>
+    <div class="msg-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>
+  `;
+  chatWindow.appendChild(div);
+  scrollBottom();
+}
+
+function removeTyping() {
+  const el = document.getElementById("typing-indicator");
+  if (el) el.remove();
+}
+
+function escHtml(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
+}
+
+function formatBotText(text) {
+  return text.split(/\n{2,}/).map(p => `<p>${p.replace(/\n/g, "<br>")}</p>`).join("");
+}
+
+async function sendMessage() {
+  const text = msgInput.value.trim();
+  if (!text || sendBtn.disabled) return;
+
+  msgInput.value = "";
+  msgInput.style.height = "auto";
+  document.getElementById("chips").style.display = "none";
+  sendBtn.disabled = true;
+
+  appendMsg("user", text);
+  history.push({ role: "user", content: text });
+
+  showTyping();
+
+  let botText = "";
+  let botBubble = null;
+
+  try {
+    const res = await fetch(`${API}/api/chat/stream`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: history, mode: currentMode }),
+    });
+
+    if (!res.ok) {
+      const detail = await res.json().catch(() => ({}));
+      const msg = detail.detail || (res.status === 503 ? "研究服务暂时不可用，请稍后再试。" : `服务器错误 ${res.status}`);
+      throw new Error(msg);
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop();
+
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        const payload = line.slice(6).trim();
+        if (payload === "[DONE]") break;
+
+        try {
+          const parsed = JSON.parse(payload);
+          if (parsed.error) throw new Error(parsed.error);
+          if (parsed.text) {
+            if (!botBubble) {
+              removeTyping();
+              const msgDiv = appendMsg("bot", "");
+              botBubble = msgDiv.querySelector(".msg-bubble");
+            }
+            botText += parsed.text;
+            botBubble.innerHTML = formatBotText(botText);
+            scrollBottom();
+          }
+        } catch (parseErr) { /* 忽略格式错误的SSE行 */ }
+      }
+    }
+  } catch (err) {
+    removeTyping();
+    appendMsg("bot", `抱歉，暂时无法连接到研究服务。（${err.message}）`);
+    botText = `Error: ${err.message}`;
+  } finally {
+    sendBtn.disabled = false;
+    msgInput.focus();
+  }
+
+  if (botText && !botText.startsWith("Error:")) {
+    history.push({ role: "assistant", content: botText });
+  }
+}
+</script>
+</body>
+</html>

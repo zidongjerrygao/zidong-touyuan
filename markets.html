@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>市场行情 — 紫东投研</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <script src="app.js" defer></script>
+  <style>
+    .mover-up { color: #16a34a; font-weight: 700; }
+    .mover-dn { color: #dc2626; font-weight: 700; }
+    .source-tag { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+    .beat-pill  { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+    .beat-pos   { background: #dcfce7; color: #166534; }
+    .beat-neg   { background: #fee2e2; color: #991b1b; }
+    .beat-neu   { background: #f1f5f9; color: #64748b; }
+    .day-badge  { display: inline-block; padding: 2px 7px; border-radius: 6px; font-size: 11px; font-weight: 600; background: #f0f4ff; color: #3b5bdb; }
+    .earnings-row:hover td { background: #fafafa; }
+    .earn-filter { padding: 4px 12px; border-radius: 16px; border: 1px solid var(--border); background: #fff; font-size: 12px; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all 0.15s; }
+    .earn-filter:hover { border-color: var(--orange); color: var(--orange); }
+    .earn-filter.active { background: var(--orange); border-color: var(--orange); color: #fff; }
+    .filter-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .section-gap { height: 40px; }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-logo-zd">紫<span>东投研</span></div>
+    <div class="nav-links" id="nav-links"></div>
+    <div id="nav-user-info"></div>
+    <div class="nav-actions" id="nav-actions"></div>
+  </div>
+</nav>
+
+<div class="ticker-bar" id="ticker-bar"></div>
+
+<main class="page">
+
+  <!-- 市场指数 -->
+  <div class="section-head" style="margin-bottom:16px;">
+    <h2>市场行情</h2>
+    <span class="source-tag" id="data-source">加载中…</span>
+  </div>
+
+  <div class="section-head" style="margin-bottom:12px;">
+    <h3 style="font-size:16px;font-weight:700;color:var(--text);">市场指数</h3>
+  </div>
+  <div class="grid-4" id="index-cards">
+    <div class="stat-card"><div class="label">—</div><div class="value">—</div><div class="change">加载中…</div></div>
+    <div class="stat-card"><div class="label">—</div><div class="value">—</div><div class="change">加载中…</div></div>
+    <div class="stat-card"><div class="label">—</div><div class="value">—</div><div class="change">加载中…</div></div>
+    <div class="stat-card"><div class="label">—</div><div class="value">—</div><div class="change">加载中…</div></div>
+  </div>
+
+  <div class="section-gap"></div>
+
+  <!-- 财报日历 -->
+  <div class="section-head" style="margin-bottom:12px;">
+    <h3 style="font-size:16px;font-weight:700;color:var(--text);">财报日历</h3>
+  </div>
+  <div class="filter-tabs">
+    <button class="earn-filter active" data-filter="all" onclick="setEarnFilter(this,'all')">全部</button>
+    <button class="earn-filter" data-filter="reported" onclick="setEarnFilter(this,'reported')">已公布</button>
+    <button class="earn-filter" data-filter="upcoming" onclick="setEarnFilter(this,'upcoming')">待公布</button>
+  </div>
+  <div class="card" style="margin-bottom:32px;">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>股票代码</th>
+            <th>公司名称</th>
+            <th>财报日期</th>
+            <th>EPS预期</th>
+            <th>EPS实际</th>
+            <th>超预期</th>
+            <th>营收</th>
+            <th>股价反应</th>
+          </tr>
+        </thead>
+        <tbody id="earnings-body">
+          <tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-muted);">加载中…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 个股动态 -->
+  <div class="section-head" style="margin-bottom:12px;">
+    <h3 style="font-size:16px;font-weight:700;color:var(--text);">个股动态</h3>
+  </div>
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>代码</th>
+            <th>名称</th>
+            <th>价格（美元）</th>
+            <th>涨跌幅</th>
+          </tr>
+        </thead>
+        <tbody id="movers-body">
+          <tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted);">加载中…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<footer class="footer">
+  © 2026 紫东投研 · <a href="#">隐私政策</a> · <a href="#">使用条款</a>
+</footer>
+
+<script>
+const API = "https://moomooinsights-production.up.railway.app";
+
+const INDEX_NAMES = {
+  SPX: "标普500",
+  NDX: "纳斯达克100",
+  DJI: "道琼斯",
+  VIX: "恐慌指数",
+};
+
+function formatPrice(price, symbol) {
+  if (!price) return "—";
+  if (symbol === "USDSGD") return price.toFixed(4);
+  if (price > 10000) return price.toLocaleString("zh-CN", { maximumFractionDigits: 0 });
+  return price.toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatRev(v) {
+  if (!v) return "—";
+  if (v >= 1e12) return `$${(v / 1e12).toFixed(2)}万亿`;
+  if (v >= 1e9)  return `$${(v / 1e9).toFixed(2)}十亿`;
+  if (v >= 1e6)  return `$${(v / 1e6).toFixed(0)}百万`;
+  return `$${v.toFixed(0)}`;
+}
+
+function beatPill(pct) {
+  if (pct == null) return `<span class="beat-pill beat-neu">待公布</span>`;
+  const cls = pct >= 0 ? "beat-pos" : "beat-neg";
+  const label = pct >= 0 ? "超预期" : "不及预期";
+  const sign = pct >= 0 ? "+" : "";
+  return `<span class="beat-pill ${cls}">${label} ${sign}${pct.toFixed(1)}%</span>`;
+}
+
+function dayLabel(dateStr) {
+  const days = ["周日","周一","周二","周三","周四","周五","周六"];
+  const d = new Date(dateStr + "T00:00:00");
+  return `<span class="day-badge">${days[d.getDay()]} ${dateStr.slice(5)}</span>`;
+}
+
+async function loadMarkets() {
+  try {
+    const data = await fetch(`${API}/api/markets`).then(r => r.json());
+
+    const srcEl = document.getElementById("data-source");
+    if (data.as_of) {
+      srcEl.textContent = `数据来源：雅虎财经 · ${new Date(data.as_of).toLocaleTimeString("zh-CN")}`;
+    } else {
+      srcEl.textContent = "数据来源：雅虎财经";
+    }
+
+    // Index cards — show SPX, NDX, DJI, VIX
+    const indexOrder = ["SPX", "NDX", "DJI", "VIX"];
+    const allIndices = data.indices || [];
+    const toShow = indexOrder.map(sym => allIndices.find(i => i.symbol === sym)).filter(Boolean);
+
+    const cards = document.getElementById("index-cards");
+    if (toShow.length) {
+      cards.style.gridTemplateColumns = `repeat(${Math.min(toShow.length, 4)}, 1fr)`;
+      cards.innerHTML = toShow.map(i => {
+        const cls = i.change_pct >= 0 ? "up" : "dn";
+        const sign = i.change_pct >= 0 ? "+" : "";
+        const displayName = INDEX_NAMES[i.symbol] || i.name || i.symbol;
+        return `<div class="stat-card">
+          <div class="label">${displayName}</div>
+          <div class="value">${formatPrice(i.price, i.symbol)}</div>
+          <div class="change ${cls}">${sign}${(i.change || 0).toFixed(2)} &nbsp;<span style="opacity:0.8">(${sign}${i.change_pct.toFixed(2)}%)</span></div>
+        </div>`;
+      }).join("");
+    }
+
+    // Movers
+    const movers = data.movers || [];
+    const tbody = document.getElementById("movers-body");
+    if (!movers.length) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted);">暂无个股动态数据</td></tr>`;
+    } else {
+      tbody.innerHTML = movers.map(m => {
+        const cls = m.change_pct >= 0 ? "mover-up" : "mover-dn";
+        const sign = m.change_pct >= 0 ? "+" : "";
+        return `<tr>
+          <td><strong>${m.ticker}</strong></td>
+          <td>${m.name || "—"}</td>
+          <td>$${m.price.toFixed(2)}</td>
+          <td class="${cls}">${sign}${m.change_pct.toFixed(2)}%</td>
+        </tr>`;
+      }).join("");
+    }
+  } catch (e) {
+    document.getElementById("index-cards").innerHTML =
+      `<div style="grid-column:1/-1;padding:20px;color:var(--text-muted);">无法加载市场数据：${e.message}</div>`;
+  }
+}
+
+let _earnFilter = "all";
+let _allEarnings = [];
+
+function setEarnFilter(btn, filter) {
+  document.querySelectorAll(".earn-filter").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  _earnFilter = filter;
+  renderEarnings();
+}
+
+function renderEarnings() {
+  const tbody = document.getElementById("earnings-body");
+  let data = _allEarnings;
+
+  if (_earnFilter === "reported") {
+    data = data.filter(r => r.eps_actual != null);
+  } else if (_earnFilter === "upcoming") {
+    data = data.filter(r => r.eps_actual == null);
+  }
+
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-muted);">暂无财报数据</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.slice(0, 40).map(r => {
+    const priceReact = r.price_reaction != null
+      ? `<span class="${r.price_reaction >= 0 ? 'mover-up' : 'mover-dn'}">${r.price_reaction >= 0 ? "+" : ""}${r.price_reaction.toFixed(2)}%</span>`
+      : "—";
+    return `<tr class="earnings-row">
+      <td><strong>${r.ticker}</strong></td>
+      <td>${r.name || "—"}</td>
+      <td>${r.report_date ? dayLabel(r.report_date) : "—"}</td>
+      <td>${r.eps_estimate != null ? r.eps_estimate.toFixed(2) : "—"}</td>
+      <td>${r.eps_actual != null ? r.eps_actual.toFixed(2) : "—"}</td>
+      <td>${beatPill(r.eps_surprise_pct)}</td>
+      <td>${formatRev(r.revenue_actual || r.revenue_estimate)}</td>
+      <td>${priceReact}</td>
+    </tr>`;
+  }).join("");
+}
+
+async function loadEarnings() {
+  const tbody = document.getElementById("earnings-body");
+  tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-muted);">加载中…</td></tr>`;
+  try {
+    const data = await fetch(`${API}/api/earnings`).then(r => r.json());
+    _allEarnings = Array.isArray(data) ? data : (data.items || data.earnings || []);
+    renderEarnings();
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-muted);">无法加载财报数据：${e.message}</td></tr>`;
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadMarkets();
+  loadEarnings();
+  setInterval(loadMarkets, 60000);
+});
+</script>
+</body>
+</html>

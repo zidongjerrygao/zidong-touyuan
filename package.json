@@ -1,0 +1,11 @@
+{
+  "name": "zidong-touyuan",
+  "version": "1.0.0",
+  "description": "紫东投研 - Chinese investment research site",
+  "scripts": {
+    "start": "serve . --listen $PORT --single"
+  },
+  "dependencies": {
+    "serve": "^14.2.3"
+  }
+}
