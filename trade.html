@@ -249,8 +249,8 @@ async function renderTrade() {
   // Try to fetch full content for inline rendering
   try {
     const fullArticle = await fetch(`${API}/api/articles/${featured.id}`).then(r => r.json());
-    if (fullArticle && fullArticle.content_html) {
-      html += `<div class="featured-article-content">${fullArticle.content_html}</div>`;
+    if (fullArticle && (fullArticle.content_html_zh_cn || fullArticle.content_html)) {
+      html += `<div class="featured-article-content">${fullArticle.content_html_zh_cn || fullArticle.content_html}</div>`;
     } else {
       // Fallback to hero card
       const heroTitle = featured.title_zh_cn || featured.title;
