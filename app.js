@@ -404,8 +404,7 @@ function articleThumbnailSVG(article) {
 ${Array.from({length:4},(_,r)=>Array.from({length:9},(_,c)=>`<circle cx="${c*50+25}" cy="${r*60+30}" r="1.2" fill="${theme.accent}" opacity="0.08"/>`).join('')).join('')}
 ${bars.map((h,i)=>{const bh=h*0.65,x=bx0+i*(bw+bg);return `<rect x="${x.toFixed(1)}" y="${(by-bh).toFixed(1)}" width="${bw}" height="${bh.toFixed(1)}" fill="${i%3===1?theme.accent:'#fff'}" opacity="${(0.2+i/bars.length*0.45).toFixed(2)}" rx="2"/>`;}).join('')}
 <rect width="400" height="180" fill="url(#fd${uid})"/>
-<rect x="10" y="10" width="${catLabel.length*13+20}" height="22" rx="4" fill="${theme.accent}" opacity="0.30"/>
-<text x="18" y="25" font-family="'Noto Sans SC',system-ui,sans-serif" font-size="11" font-weight="700" fill="${theme.accent}" letter-spacing="0.5">${catLabel}</text>
+${(()=>{const cw=/^[A-Z0-9 ]+$/.test(catLabel)?8:13;const pw=catLabel.length*cw+20;const cx=10+pw/2;return `<rect x="10" y="10" width="${pw}" height="22" rx="4" fill="${theme.accent}" opacity="0.30"/><text x="${cx}" y="25" font-family="'Noto Sans SC',system-ui,sans-serif" font-size="11" font-weight="700" fill="${theme.accent}" text-anchor="middle" letter-spacing="0.5">${catLabel}</text>`;})()}
 <text x="200" y="${my}" font-family="'Noto Sans SC',system-ui,sans-serif" font-size="${fs}" font-weight="900" fill="white" text-anchor="middle" dominant-baseline="middle" letter-spacing="3" opacity="0.95">${mainLabel}</text>
 ${subLabel?`<text x="200" y="${my+fs*0.68}" font-family="system-ui,sans-serif" font-size="11" fill="white" text-anchor="middle" dominant-baseline="middle" opacity="0.6">${subLabel}</text>`:''}
 <text x="392" y="172" font-family="system-ui,sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="end" opacity="0.35">竑睿投研</text>
