@@ -1,4 +1,5 @@
 const API = "https://moomooinsights-production.up.railway.app";
+window.API = API; // expose as true global so inline scripts can access it
 
 // ── Auth helpers ──────────────────────────────────────────────────────────────
 function getToken() { return localStorage.getItem("zidong_token"); }

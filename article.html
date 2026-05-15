@@ -336,6 +336,8 @@
 
 <script src="app.js"></script>
 <script>
+  const _API = window.API || "https://moomooinsights-production.up.railway.app";
+
   const AUTHOR_MAP = {
     "Trader Moo": "交易大师",
     "Moomoo Insights": "竑睿投研",
@@ -385,7 +387,7 @@
     }
 
     try {
-      const res = await fetch(`${API}/api/articles/${id}`);
+      const res = await fetch(`${_API}/api/articles/${id}`);
       if (!res.ok) throw new Error('Not found');
       const data = await res.json();
 
@@ -437,7 +439,7 @@
   async function loadRelated(category, currentId) {
     const listEl = document.getElementById('related-list');
     try {
-      const res = await fetch(`${API}/api/articles?limit=20&category=${encodeURIComponent(category)}`);
+      const res = await fetch(`${_API}/api/articles?limit=20&category=${encodeURIComponent(category)}`);
       const articles = await res.json();
       const related = (Array.isArray(articles) ? articles : (articles.articles || []))
         .filter(a => String(a.id) !== String(currentId))
