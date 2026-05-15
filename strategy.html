@@ -103,8 +103,8 @@ function articleCardHTML(a) {
   const title = a.title_zh_cn || a.title;
   const excerpt = a.excerpt_zh_cn || a.excerpt || "";
   return `
-    <div class="article-card" onclick="location.href='article.html?id=${a.id}'">
-      <div class="article-card-img-placeholder">${categoryEmoji(a.category)}</div>
+    <a href="article.html?id=${a.id}" class="article-card" style="text-decoration:none;color:inherit;display:flex;flex-direction:column;">
+      <div class="article-card-img-placeholder" style="padding:0;overflow:hidden;">${articleThumbnailSVG(a)}</div>
       <div class="article-card-body">
         <div class="article-card-category">${translateCategory(a.category)}</div>
         <div class="article-card-title">${title}</div>
@@ -115,7 +115,7 @@ function articleCardHTML(a) {
           <span>${formatDateZH(a.created_at)}</span>
         </div>
       </div>
-    </div>`;
+    </a>`;
 }
 
 let activeCategory = "Macro";
@@ -147,15 +147,15 @@ async function loadStrategy() {
     const heroTitle = featured.title_zh_cn || featured.title;
     const heroExcerpt = featured.excerpt_zh_cn || featured.excerpt || "";
     let html = `
-      <div class="hero-article" onclick="location.href='article.html?id=${featured.id}'">
-        <div class="hero-article-img">${categoryEmoji(featured.category)}</div>
+      <a href="article.html?id=${featured.id}" class="hero-article" style="text-decoration:none;color:inherit;">
+        <div class="hero-article-img" style="padding:0;overflow:hidden;">${articleThumbnailSVG(featured)}</div>
         <div class="hero-article-body">
           <span class="hero-tag">${translateCategory(featured.category)}</span>
           <h1 class="hero-title">${heroTitle}</h1>
           <p class="hero-excerpt">${heroExcerpt}</p>
           <div class="hero-meta">${translateAuthor(featured.author)} · ${formatDateZH(featured.created_at)}</div>
         </div>
-      </div>
+      </a>
     `;
     if (rest.length) {
       html += `
