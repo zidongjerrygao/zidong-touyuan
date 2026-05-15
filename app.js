@@ -252,14 +252,14 @@ document.addEventListener("click", e => {
 async function loadTickerBar(container) {
   try {
     const data = await apiGet("/api/markets");
-    const items = data.indices || [];
-    const html = items.map(i => {
-      const cls  = i.change_pct >= 0 ? "up" : "dn";
-      const sign = i.change_pct >= 0 ? "+" : "";
+    const items = data.treasuries || [];
+    const html = items.map(y => {
+      const cls  = y.change >= 0 ? "up" : "dn";
+      const sign = y.change >= 0 ? "+" : "";
       return `<span class="ticker-item">
-        <span class="label">${i.symbol}</span>
-        <span class="price">${formatPrice(i.price, i.symbol)}</span>
-        <span class="${cls}">${sign}${i.change_pct.toFixed(2)}%</span>
+        <span class="label">${y.label}</span>
+        <span class="price">${y.rate.toFixed(2)}%</span>
+        <span class="${cls}">${sign}${y.change.toFixed(3)}</span>
       </span>`;
     }).join("");
     // duplicate for seamless loop
