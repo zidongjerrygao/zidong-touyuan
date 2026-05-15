@@ -439,17 +439,11 @@ img { max-width: 100%; }
 
 .ticker-scroll {
   display: flex;
-  animation: scroll-ticker 40s linear infinite;
   white-space: nowrap;
-  gap: 40px;
-  padding-left: 100%;
-}
-
-.ticker-scroll:hover { animation-play-state: paused; }
-
-@keyframes scroll-ticker {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+  gap: 0;
+  width: 100%;
+  justify-content: space-around;
+  align-items: center;
 }
 
 .ticker-item {
