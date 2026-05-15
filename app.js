@@ -357,6 +357,61 @@ function categoryEmoji(cat) {
   return map[cat] || "📰";
 }
 
+// ── Thumbnail SVG generator ───────────────────────────────────────────────────
+const _TICKER_THEMES = {
+  AAPL:{g1:'#1d1d1f',g2:'#2d2d2f',accent:'#f5f5f7'},MSFT:{g1:'#0058a0',g2:'#003f74',accent:'#50e6ff'},
+  NVDA:{g1:'#1a3a00',g2:'#2d5c00',accent:'#76b900'},AMZN:{g1:'#b36900',g2:'#7a4800',accent:'#ff9900'},
+  META:{g1:'#1877f2',g2:'#0a4fa0',accent:'#a8c8ff'},GOOGL:{g1:'#1a73e8',g2:'#0d47a1',accent:'#f9ab00'},
+  TSLA:{g1:'#b30000',g2:'#7a0000',accent:'#ff6666'},JPM:{g1:'#003087',g2:'#001a4d',accent:'#4a90d9'},
+  MCD:{g1:'#da291c',g2:'#9a1a10',accent:'#ffbc0d'},CSCO:{g1:'#049fd9',g2:'#0270a0',accent:'#a0e4f8'},
+  AMD:{g1:'#ed1c24',g2:'#a01018',accent:'#fff'},NFLX:{g1:'#e50914',g2:'#8c0610',accent:'#fff'},
+  AVGO:{g1:'#cc2200',g2:'#801400',accent:'#ff9966'},ORCL:{g1:'#c74634',g2:'#8a2818',accent:'#f8c85c'},
+  QCOM:{g1:'#3253dc',g2:'#1a37aa',accent:'#a0b4ff'},CRM:{g1:'#009edb',g2:'#006c99',accent:'#fff'},
+  WMT:{g1:'#0071ce',g2:'#004c8c',accent:'#ffc220'},UNH:{g1:'#002677',g2:'#001040',accent:'#00bcd4'},
+};
+const _CAT_THEMES = {
+  'Daily Brief':{g1:'#1a1f3c',g2:'#2b2f50',accent:'#f97316',label:'每日简报'},
+  'Earnings':{g1:'#1e3a5f',g2:'#0f2744',accent:'#fbbf24',label:'财报速递'},
+  'Macro':{g1:'#0f2744',g2:'#0a1a30',accent:'#60a5fa',label:'宏观策略'},
+  'Equity':{g1:'#064e3b',g2:'#043a2b',accent:'#34d399',label:'股票策略'},
+  'Credit':{g1:'#1e1b4b',g2:'#14123a',accent:'#a78bfa',label:'信用策略'},
+  'Market Analysis':{g1:'#0c4a6e',g2:'#073549',accent:'#38bdf8',label:'市场深度'},
+  'TSLA':{g1:'#b30000',g2:'#7a0000',accent:'#ff6666',label:'TSLA'},
+  'NVDA':{g1:'#1a3a00',g2:'#2d5c00',accent:'#76b900',label:'NVDA'},
+};
+function articleThumbnailSVG(article) {
+  const title = article.title || '';
+  const cat = article.category || '';
+  const id = article.id || 0;
+  let theme = _CAT_THEMES[cat] || _CAT_THEMES['Daily Brief'];
+  let mainLabel = theme.label;
+  let subLabel = '';
+  const tm = title.match(/^([A-Z]{2,5})[\s:]/);
+  if (tm && _TICKER_THEMES[tm[1]]) { theme = {..._TICKER_THEMES[tm[1]], label: tm[1]}; mainLabel = tm[1]; }
+  else if (['TSLA','NVDA'].includes(cat)) { mainLabel = cat; if (_TICKER_THEMES[cat]) theme = {..._TICKER_THEMES[cat], label: cat}; }
+  if (cat === 'Daily Brief') { const dm = title.match(/[—–-]\s*(.+)$/); if (dm) subLabel = dm[1].trim().slice(0,20); }
+  const bars = Array.from({length:10},(_,i)=>15+((id*7+i*17+i*i*3)%100+100)%100*0.6);
+  const bw=14,bg=5,bx0=200-bars.length*(bw+bg)/2,by=170;
+  const uid=`a${id}`;
+  const fs = mainLabel.length>8?26:mainLabel.length>5?34:44;
+  const my = subLabel ? 85 : 92;
+  const catLabel = (_CAT_THEMES[cat]||_CAT_THEMES['Daily Brief']).label;
+  return `<svg viewBox="0 0 400 180" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" style="display:block;" preserveAspectRatio="xMidYMid slice">
+<defs><linearGradient id="bg${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="${theme.g1}"/><stop offset="100%" stop-color="${theme.g2}"/></linearGradient>
+<linearGradient id="fd${uid}" x1="0%" y1="40%" x2="0%" y2="100%"><stop offset="0%" stop-color="${theme.g2}" stop-opacity="0"/><stop offset="100%" stop-color="${theme.g1}" stop-opacity="0.8"/></linearGradient></defs>
+<rect width="400" height="180" fill="url(#bg${uid})"/>
+<circle cx="370" cy="-5" r="55" fill="${theme.accent}" opacity="0.12"/><circle cx="30" cy="190" r="40" fill="${theme.accent}" opacity="0.07"/>
+${Array.from({length:4},(_,r)=>Array.from({length:9},(_,c)=>`<circle cx="${c*50+25}" cy="${r*60+30}" r="1.2" fill="${theme.accent}" opacity="0.08"/>`).join('')).join('')}
+${bars.map((h,i)=>{const bh=h*0.65,x=bx0+i*(bw+bg);return `<rect x="${x.toFixed(1)}" y="${(by-bh).toFixed(1)}" width="${bw}" height="${bh.toFixed(1)}" fill="${i%3===1?theme.accent:'#fff'}" opacity="${(0.2+i/bars.length*0.45).toFixed(2)}" rx="2"/>`;}).join('')}
+<rect width="400" height="180" fill="url(#fd${uid})"/>
+<rect x="12" y="12" width="${catLabel.length*8+14}" height="21" rx="4" fill="${theme.accent}" opacity="0.18"/>
+<text x="19" y="26.5" font-family="'Noto Sans SC',system-ui,sans-serif" font-size="11" font-weight="700" fill="${theme.accent}" letter-spacing="0.5">${catLabel}</text>
+<text x="200" y="${my}" font-family="'Noto Sans SC',system-ui,sans-serif" font-size="${fs}" font-weight="900" fill="white" text-anchor="middle" dominant-baseline="middle" letter-spacing="3" opacity="0.95">${mainLabel}</text>
+${subLabel?`<text x="200" y="${my+fs*0.68}" font-family="system-ui,sans-serif" font-size="11" fill="white" text-anchor="middle" dominant-baseline="middle" opacity="0.6">${subLabel}</text>`:''}
+<text x="392" y="172" font-family="system-ui,sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="end" opacity="0.35">竑睿投研</text>
+</svg>`;
+}
+
 // ── Article card ──────────────────────────────────────────────────────────────
 function articleCardHTML(a) {
   const title    = a.title_zh_cn   || a.title   || "";
@@ -366,7 +421,7 @@ function articleCardHTML(a) {
 
   return `
     <div class="article-card" onclick="location.href='article.html?id=${a.id}'">
-      <div class="article-card-img-placeholder">${categoryEmoji(a.category)}</div>
+      <div class="article-card-img-placeholder" style="padding:0;overflow:hidden;">${articleThumbnailSVG(a)}</div>
       <div class="article-card-body">
         <div class="article-card-category">${catLabel}</div>
         <div class="article-card-title">${title}</div>

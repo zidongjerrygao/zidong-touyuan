@@ -76,15 +76,128 @@ function translateCategory(cat) {
   return map[cat] || cat || "投研";
 }
 
-function categoryEmoji(cat) {
-  const map = {
-    "Market Analysis": "📊", "Earnings": "💰", "Economy": "🌐",
-    "Tech": "💻", "Energy": "⚡", "Healthcare": "🏥",
-    "Finance": "🏦", "SG Market": "🇸🇬", "US Market": "🇺🇸",
-    "Macro": "🌐", "Equity": "📈", "Credit": "💳",
-    "TSLA": "🚗", "NVDA": "🟢", "Daily Brief": "📰",
-  };
-  return map[cat] || "📰";
+const TICKER_THEMES = {
+  AAPL:  { g1:'#1d1d1f', g2:'#2d2d2f', accent:'#f5f5f7', name:'AAPL' },
+  MSFT:  { g1:'#0058a0', g2:'#003f74', accent:'#50e6ff', name:'MSFT' },
+  NVDA:  { g1:'#1a3a00', g2:'#2d5c00', accent:'#76b900', name:'NVDA' },
+  AMZN:  { g1:'#b36900', g2:'#7a4800', accent:'#ff9900', name:'AMZN' },
+  META:  { g1:'#1877f2', g2:'#0a4fa0', accent:'#a8c8ff', name:'META' },
+  GOOGL: { g1:'#1a73e8', g2:'#0d47a1', accent:'#f9ab00', name:'GOOGL' },
+  TSLA:  { g1:'#b30000', g2:'#7a0000', accent:'#ff6666', name:'TSLA' },
+  JPM:   { g1:'#003087', g2:'#001a4d', accent:'#4a90d9', name:'JPM' },
+  MCD:   { g1:'#da291c', g2:'#9a1a10', accent:'#ffbc0d', name:'MCD' },
+  CSCO:  { g1:'#049fd9', g2:'#0270a0', accent:'#a0e4f8', name:'CSCO' },
+  WMT:   { g1:'#0071ce', g2:'#004c8c', accent:'#ffc220', name:'WMT' },
+  UNH:   { g1:'#002677', g2:'#001040', accent:'#00bcd4', name:'UNH' },
+  LLY:   { g1:'#c02832', g2:'#8a1a20', accent:'#f9a825', name:'LLY' },
+  AMD:   { g1:'#ed1c24', g2:'#a01018', accent:'#fff', name:'AMD' },
+  NFLX:  { g1:'#e50914', g2:'#8c0610', accent:'#fff', name:'NFLX' },
+  AVGO:  { g1:'#cc2200', g2:'#801400', accent:'#ff9966', name:'AVGO' },
+  ORCL:  { g1:'#c74634', g2:'#8a2818', accent:'#f8c85c', name:'ORCL' },
+  QCOM:  { g1:'#3253dc', g2:'#1a37aa', accent:'#a0b4ff', name:'QCOM' },
+  INTU:  { g1:'#365ebf', g2:'#1e3e8c', accent:'#00b0f5', name:'INTU' },
+  CRM:   { g1:'#009edb', g2:'#006c99', accent:'#fff', name:'CRM' },
+  NOW:   { g1:'#62d84e', g2:'#3d9830', accent:'#fff', name:'NOW' },
+};
+
+const CAT_THEMES = {
+  'Daily Brief':     { g1:'#1a1f3c', g2:'#2b2f50', accent:'#f97316', label:'每日简报' },
+  'Earnings':        { g1:'#1e3a5f', g2:'#0f2744', accent:'#fbbf24', label:'财报速递' },
+  'Macro':           { g1:'#0f2744', g2:'#0a1a30', accent:'#60a5fa', label:'宏观策略' },
+  'Equity':          { g1:'#064e3b', g2:'#043a2b', accent:'#34d399', label:'股票策略' },
+  'Credit':          { g1:'#1e1b4b', g2:'#14123a', accent:'#a78bfa', label:'信用策略' },
+  'Market Analysis': { g1:'#0c4a6e', g2:'#073549', accent:'#38bdf8', label:'市场深度' },
+  'TSLA':            { g1:'#b30000', g2:'#7a0000', accent:'#ff6666', label:'TSLA' },
+  'NVDA':            { g1:'#1a3a00', g2:'#2d5c00', accent:'#76b900', label:'NVDA' },
+};
+
+function generateThumbnailSVG(article, big) {
+  const title = article.title || '';
+  const cat = article.category || '';
+  const id = article.id || 0;
+  const h = big ? 320 : 180;
+
+  let theme = CAT_THEMES[cat] || CAT_THEMES['Daily Brief'];
+  let mainLabel = theme.label;
+  let subLabel = '';
+
+  // For Earnings and trade-plan categories, try to extract ticker
+  const tickerExtract = title.match(/^([A-Z]{2,5})[\s:]/);
+  if (tickerExtract) {
+    const t = tickerExtract[1];
+    if (TICKER_THEMES[t]) {
+      theme = { ...TICKER_THEMES[t], label: TICKER_THEMES[t].name };
+    }
+    mainLabel = t;
+  } else if (['TSLA','NVDA'].includes(cat)) {
+    mainLabel = cat;
+    if (TICKER_THEMES[cat]) theme = { ...TICKER_THEMES[cat], label: cat };
+  }
+
+  // For Daily Brief, extract date from title
+  if (cat === 'Daily Brief') {
+    const dm = title.match(/[—–-]\s*(.+)$/);
+    if (dm) subLabel = dm[1].trim().slice(0, 20);
+  }
+
+  // Seeded pseudo-random bar heights
+  const bars = Array.from({length: 10}, (_, i) => {
+    const seed = ((id * 7 + i * 17 + i * i * 3) % 100 + 100) % 100;
+    return 15 + seed * 0.6;
+  });
+
+  const barW = big ? 22 : 14;
+  const barGap = big ? 7 : 5;
+  const totalW = bars.length * (barW + barGap);
+  const bx0 = 200 - totalW / 2;
+  const baseY = h - 10;
+  const maxBarH = big ? 100 : 65;
+
+  const barsSVG = bars.map((pct, i) => {
+    const bh = pct / 100 * maxBarH;
+    const x = bx0 + i * (barW + barGap);
+    const isAccent = i % 3 === 1;
+    const op = 0.25 + (i / bars.length) * 0.45;
+    return `<rect x="${x.toFixed(1)}" y="${(baseY - bh).toFixed(1)}" width="${barW}" height="${bh.toFixed(1)}" fill="${isAccent ? theme.accent : '#ffffff'}" opacity="${op.toFixed(2)}" rx="2"/>`;
+  }).join('');
+
+  const uid = `t${id}`;
+  const mainFontSize = mainLabel.length > 8 ? (big ? 44 : 28) : mainLabel.length > 5 ? (big ? 56 : 36) : (big ? 72 : 48);
+  const mainY = big ? (subLabel ? 150 : 160) : (subLabel ? 88 : 95);
+  const catLabel = (CAT_THEMES[cat] || CAT_THEMES['Daily Brief']).label;
+
+  // Decorative circle accent top-right
+  const circleR = big ? 90 : 55;
+
+  return `<svg viewBox="0 0 400 ${h}" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" style="display:block;" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bg${uid}" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="${theme.g1}"/>
+      <stop offset="100%" stop-color="${theme.g2}"/>
+    </linearGradient>
+    <linearGradient id="fade${uid}" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="40%" stop-color="${theme.g2}" stop-opacity="0"/>
+      <stop offset="100%" stop-color="${theme.g1}" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="circle${uid}" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="${theme.accent}" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="${theme.accent}" stop-opacity="0.03"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="${h}" fill="url(#bg${uid})"/>
+  <circle cx="370" cy="-10" r="${circleR}" fill="url(#circle${uid})"/>
+  <circle cx="30" cy="${h + 10}" r="${big ? 70 : 40}" fill="${theme.accent}" opacity="0.07"/>
+  ${Array.from({length:5},(_,row)=>Array.from({length:9},(_,col)=>
+    `<circle cx="${col*50+25}" cy="${row*(h/4)+h/8}" r="1.2" fill="${theme.accent}" opacity="0.09"/>`
+  ).join('')).join('')}
+  ${barsSVG}
+  <rect width="400" height="${h}" fill="url(#fade${uid})"/>
+  <rect x="12" y="12" width="${catLabel.length * 8 + 16}" height="22" rx="4" fill="${theme.accent}" opacity="0.18"/>
+  <text x="20" y="27" font-family="'Noto Sans SC',system-ui,sans-serif" font-size="11" font-weight="700" fill="${theme.accent}" letter-spacing="0.5">${catLabel}</text>
+  <text x="200" y="${mainY}" font-family="'Noto Sans SC',system-ui,sans-serif" font-size="${mainFontSize}" font-weight="900" fill="white" text-anchor="middle" dominant-baseline="middle" letter-spacing="3" opacity="0.95">${mainLabel}</text>
+  ${subLabel ? `<text x="200" y="${mainY + mainFontSize * 0.7}" font-family="system-ui,sans-serif" font-size="${big?14:11}" font-weight="400" fill="white" text-anchor="middle" dominant-baseline="middle" opacity="0.6">${subLabel}</text>` : ''}
+  <text x="392" y="${h - 8}" font-family="system-ui,sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="end" opacity="0.35">竑睿投研</text>
+</svg>`;
 }
 
 function formatDateZH(d) {
@@ -100,7 +213,7 @@ function articleCardHTML(a) {
   const category = translateCategory(a.category);
   return `
     <div class="article-card" onclick="location.href='article.html?id=${a.id}'">
-      <div class="article-card-img-placeholder">${categoryEmoji(a.category)}</div>
+      <div class="article-card-img-placeholder" style="padding:0;overflow:hidden;">${generateThumbnailSVG(a, false)}</div>
       <div class="article-card-body">
         <div class="article-card-category">${category}</div>
         <div class="article-card-title">${title}</div>
@@ -148,7 +261,7 @@ async function loadPage() {
       const heroExcerpt = featured.excerpt_zh_cn || featured.excerpt || "";
       html += `
         <div class="hero-article" onclick="location.href='article.html?id=${featured.id}'">
-          <div class="hero-article-img">${categoryEmoji(featured.category)}</div>
+          <div class="hero-article-img" style="padding:0;overflow:hidden;">${generateThumbnailSVG(featured, true)}</div>
           <div class="hero-article-body">
             <span class="hero-tag">${translateCategory(featured.category)}</span>
             <h1 class="hero-title">${heroTitle}</h1>
