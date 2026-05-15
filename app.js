@@ -395,7 +395,9 @@ function articleThumbnailSVG(article) {
   let mainLabel = theme.label;
   let subLabel = '';
   const tm = title.match(/^([A-Z]{2,5})[\s:]/);
-  if (tm && _TICKER_THEMES[tm[1]]) { theme = {..._TICKER_THEMES[tm[1]], label: tm[1]}; mainLabel = tm[1]; }
+  const allW = title.match(/\b([A-Z]{2,5})\b/g) || [];
+  const tkr = (tm && _TICKER_THEMES[tm[1]]) ? tm[1] : allW.find(w => _TICKER_THEMES[w]) || null;
+  if (tkr) { theme = {..._TICKER_THEMES[tkr], label: tkr}; mainLabel = tkr; }
   else if (['TSLA','NVDA'].includes(cat)) { mainLabel = cat; if (_TICKER_THEMES[cat]) theme = {..._TICKER_THEMES[cat], label: cat}; }
   if (cat === 'Daily Brief') { const dm = title.match(/[—–-]\s*(.+)$/); if (dm) subLabel = dm[1].trim().slice(0,20); }
   const bars = Array.from({length:10},(_,i)=>15+((id*7+i*17+i*i*3)%100+100)%100*0.6);
