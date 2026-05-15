@@ -58,16 +58,38 @@
 
   <div class="section-gap"></div>
 
+  <!-- 个股动态 -->
+  <div class="section-head" style="margin-bottom:12px;">
+    <h3 style="font-size:16px;font-weight:700;color:var(--text);">个股动态</h3>
+  </div>
+  <div class="card" style="margin-bottom:32px;">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>代码</th>
+            <th>名称</th>
+            <th>价格（美元）</th>
+            <th>涨跌幅</th>
+          </tr>
+        </thead>
+        <tbody id="movers-body">
+          <tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted);">加载中…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- 财报日历 -->
   <div class="section-head" style="margin-bottom:12px;">
     <h3 style="font-size:16px;font-weight:700;color:var(--text);">财报日历</h3>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+      <button class="earn-filter active" data-filter="all" onclick="setEarnFilter(this,'all')">全部</button>
+      <button class="earn-filter" data-filter="reported" onclick="setEarnFilter(this,'reported')">已公布</button>
+      <button class="earn-filter" data-filter="upcoming" onclick="setEarnFilter(this,'upcoming')">待公布</button>
+    </div>
   </div>
-  <div class="filter-tabs">
-    <button class="earn-filter active" data-filter="all" onclick="setEarnFilter(this,'all')">全部</button>
-    <button class="earn-filter" data-filter="reported" onclick="setEarnFilter(this,'reported')">已公布</button>
-    <button class="earn-filter" data-filter="upcoming" onclick="setEarnFilter(this,'upcoming')">待公布</button>
-  </div>
-  <div class="card" style="margin-bottom:32px;">
+  <div class="card">
     <div class="table-wrap">
       <table>
         <thead>
@@ -84,28 +106,6 @@
         </thead>
         <tbody id="earnings-body">
           <tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-muted);">加载中…</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- 个股动态 -->
-  <div class="section-head" style="margin-bottom:12px;">
-    <h3 style="font-size:16px;font-weight:700;color:var(--text);">个股动态</h3>
-  </div>
-  <div class="card">
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>代码</th>
-            <th>名称</th>
-            <th>价格（美元）</th>
-            <th>涨跌幅</th>
-          </tr>
-        </thead>
-        <tbody id="movers-body">
-          <tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted);">加载中…</td></tr>
         </tbody>
       </table>
     </div>
@@ -167,14 +167,14 @@ async function loadMarkets() {
       srcEl.textContent = "数据来源：雅虎财经";
     }
 
-    // Index cards — show SPX, NDX, DJI, VIX
-    const indexOrder = ["SPX", "NDX", "DJI", "VIX"];
+    // Index cards — show SPX, NDX, DJI
+    const indexOrder = ["SPX", "NDX", "DJI"];
     const allIndices = data.indices || [];
     const toShow = indexOrder.map(sym => allIndices.find(i => i.symbol === sym)).filter(Boolean);
 
     const cards = document.getElementById("index-cards");
     if (toShow.length) {
-      cards.style.gridTemplateColumns = `repeat(${Math.min(toShow.length, 4)}, 1fr)`;
+      cards.style.gridTemplateColumns = `repeat(3, 1fr)`;
       cards.innerHTML = toShow.map(i => {
         const cls = i.change_pct >= 0 ? "up" : "dn";
         const sign = i.change_pct >= 0 ? "+" : "";
