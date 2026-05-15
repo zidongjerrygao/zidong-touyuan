@@ -271,7 +271,7 @@ async function loadTickerBar(container) {
       </span>`;
     });
     const html = [...indices, ...yields].join("");
-    container.innerHTML = `<div class="ticker-scroll">${html}${html}</div>`;
+    container.innerHTML = `<div class="ticker-scroll">${html}</div>`;
   } catch {
     container.innerHTML = `<div class="ticker-scroll"><span class="ticker-item"><span class="label">市场数据加载中...</span></span></div>`;
   }
