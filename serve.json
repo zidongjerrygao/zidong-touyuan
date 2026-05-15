@@ -1,6 +1,8 @@
 {
   "cleanUrls": false,
+  "directoryListing": false,
   "rewrites": [
+    { "source": "/",              "destination": "/index.html" },
     { "source": "/article",         "destination": "/article.html" },
     { "source": "/strategy",        "destination": "/strategy.html" },
     { "source": "/trade",           "destination": "/trade.html" },
