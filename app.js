@@ -429,7 +429,7 @@ function articleCardHTML(a) {
   const catLabel = translateCategory(a.category || "Market Analysis");
 
   return `
-    <a href="article.html?id=${a.id}" class="article-card" style="text-decoration:none;color:inherit;display:flex;flex-direction:column;">
+    <a href="/article?id=${a.id}" class="article-card" style="text-decoration:none;color:inherit;display:flex;flex-direction:column;">
       <div class="article-card-img-placeholder" style="padding:0;overflow:hidden;">${articleThumbnailSVG(a)}</div>
       <div class="article-card-body">
         <div class="article-card-category">${catLabel}</div>

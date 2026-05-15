@@ -211,7 +211,7 @@ function articleCardHTML(a) {
   const author = translateAuthor(a.author);
   const category = translateCategory(a.category);
   return `
-    <a href="article.html?id=${a.id}" class="article-card" style="text-decoration:none;color:inherit;display:flex;flex-direction:column;">
+    <a href="/article?id=${a.id}" class="article-card" style="text-decoration:none;color:inherit;display:flex;flex-direction:column;">
       <div class="article-card-img-placeholder" style="padding:0;overflow:hidden;">${generateThumbnailSVG(a, false)}</div>
       <div class="article-card-body">
         <div class="article-card-category">${category}</div>
@@ -259,7 +259,7 @@ async function loadPage() {
       const heroTitle = featured.title_zh_cn || featured.title;
       const heroExcerpt = featured.excerpt_zh_cn || featured.excerpt || "";
       html += `
-        <a href="article.html?id=${featured.id}" class="hero-article" style="text-decoration:none;">
+        <a href="/article?id=${featured.id}" class="hero-article" style="text-decoration:none;">
           <div class="hero-article-img" style="padding:0;overflow:hidden;">${generateThumbnailSVG(featured, true)}</div>
           <div class="hero-article-body">
             <span class="hero-tag">${translateCategory(featured.category)}</span>
