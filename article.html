@@ -340,6 +340,8 @@
 
   const AUTHOR_MAP = {
     "Trader Moo": "交易大师",
+    "Macro Moo": "宏观大牛",
+    "Equity Moo": "证券分析师",
     "Moomoo Insights": "竑睿投研",
     "Moomoo Research Team": "紫东研究团队",
     "Moomoo Investment Research Team": "竑睿投研团队",
@@ -394,7 +396,8 @@
       const content = data.content || data;
       const title = content.title_zh_cn || content.title || data.title || '';
       const excerpt = content.excerpt_zh_cn || content.excerpt || data.excerpt || '';
-      const bodyHtml = content.content_html_zh_cn || content.content_html || data.content_html || '';
+      let bodyHtml = (content.content_html_zh_cn || content.content_html || data.content_html || '').trim();
+      bodyHtml = bodyHtml.replace(/^```[a-z]*\s*/i, '').replace(/\s*```$/i, '');
       const author = xlAuthor(data.author || content.author || '');
       const category = xlCategory(data.category || content.category || '');
       const dateStr = formatDate(data.created_at || data.published_at || '');
