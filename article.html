@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>文章详情 — 紫东投研</title>
+  <title>文章详情 — 竑睿投研</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
@@ -275,7 +275,7 @@
 
 <nav class="nav">
   <div class="nav-inner">
-    <div class="nav-logo-zd">紫<span>东投研</span></div>
+    <div class="nav-logo-zd">竑<span>睿投研</span></div>
     <div class="nav-links" id="nav-links"></div>
     <div id="nav-user-info"></div>
     <div class="nav-actions" id="nav-actions"></div>
@@ -332,7 +332,7 @@
 
 </div>
 
-<footer class="footer">© 2026 紫东投研 · <a href="#">隐私政策</a> · <a href="#">使用条款</a></footer>
+<footer class="footer">© 2026 竑睿投研 · <a href="#">隐私政策</a> · <a href="#">使用条款</a></footer>
 
 <script src="app.js"></script>
 <script>
@@ -340,10 +340,10 @@
 
   const AUTHOR_MAP = {
     "Trader Moo": "交易大师",
-    "Moomoo Insights": "紫东投研",
+    "Moomoo Insights": "竑睿投研",
     "Moomoo Research Team": "紫东研究团队",
-    "Moomoo Investment Research Team": "紫东投研团队",
-    "Moomoo Investment Strategy Team": "紫东投研团队",
+    "Moomoo Investment Research Team": "竑睿投研团队",
+    "Moomoo Investment Strategy Team": "竑睿投研团队",
   };
   function xlAuthor(a) { return AUTHOR_MAP[a] || a; }
 
@@ -400,7 +400,7 @@
       const dateStr = formatDate(data.created_at || data.published_at || '');
 
       // Update page title
-      document.title = `${title} — 紫东投研`;
+      document.title = `${title} — 竑睿投研`;
 
       // Update breadcrumb
       document.getElementById('bc-category').innerHTML = `<a href="index.html?cat=${encodeURIComponent(data.category || '')}">${category}</a>`;
@@ -415,7 +415,7 @@
         <div class="article-meta">
           <div class="article-meta-author">
             <div class="author-avatar">${authorInitial}</div>
-            <span>${author || '紫东投研'}</span>
+            <span>${author || '竑睿投研'}</span>
           </div>
           <span>${dateStr}</span>
         </div>

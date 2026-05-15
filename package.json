@@ -1,7 +1,7 @@
 {
   "name": "zidong-touyuan",
   "version": "1.0.0",
-  "description": "紫东投研 - Chinese investment research site",
+  "description": "竑睿投研 - Chinese investment research site",
   "scripts": {
     "start": "serve . --listen $PORT --single"
   },

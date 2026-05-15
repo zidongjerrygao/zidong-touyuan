@@ -339,10 +339,10 @@ function translateCategory(cat) {
 function translateAuthor(author) {
   const map = {
     "Trader Moo":                        "交易大师",
-    "Moomoo Insights":                   "紫东投研",
+    "Moomoo Insights":                   "竑睿投研",
     "Moomoo Research Team":              "紫东研究团队",
-    "Moomoo Investment Research Team":   "紫东投研团队",
-    "Moomoo Investment Strategy Team":   "紫东投研团队",
+    "Moomoo Investment Research Team":   "竑睿投研团队",
+    "Moomoo Investment Strategy Team":   "竑睿投研团队",
   };
   return map[author] || author;
 }
@@ -361,7 +361,7 @@ function categoryEmoji(cat) {
 function articleCardHTML(a) {
   const title    = a.title_zh_cn   || a.title   || "";
   const excerpt  = a.excerpt_zh_cn || a.excerpt || "";
-  const author   = translateAuthor(a.author || "紫东投研");
+  const author   = translateAuthor(a.author || "竑睿投研");
   const catLabel = translateCategory(a.category || "Market Analysis");
 
   return `
