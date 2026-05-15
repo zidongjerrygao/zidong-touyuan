@@ -399,6 +399,13 @@ function articleThumbnailSVG(article) {
   const tkr = (tm && _TICKER_THEMES[tm[1]]) ? tm[1] : allW.find(w => _TICKER_THEMES[w]) || null;
   if (tkr) { theme = {..._TICKER_THEMES[tkr], label: tkr}; mainLabel = tkr; }
   else if (['TSLA','NVDA'].includes(cat)) { mainLabel = cat; if (_TICKER_THEMES[cat]) theme = {..._TICKER_THEMES[cat], label: cat}; }
+  if (cat === 'Earnings' && mainLabel === theme.label) {
+    const startM = title.match(/^([A-Z]{1,5})[\s:]/);
+    const earningsM = title.match(/\b([A-Z]{1,5})\s+[Ee]arnings/);
+    const ticker = (startM && startM[1]) || (earningsM && earningsM[1]) || (allW[0] || null);
+    if (ticker) mainLabel = ticker;
+    subLabel = /Preview/i.test(title) ? 'EARNINGS PREVIEW' : /Review/i.test(title) ? 'EARNINGS REVIEW' : 'EARNINGS';
+  }
   if (cat === 'Daily Brief') { const dm = title.match(/[—–-]\s*(.+)$/); if (dm) subLabel = dm[1].trim().slice(0,20); }
   const bars = Array.from({length:10},(_,i)=>15+((id*7+i*17+i*i*3)%100+100)%100*0.6);
   const bw=14,bg=5,bx0=200-bars.length*(bw+bg)/2,by=170;
