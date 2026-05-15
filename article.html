@@ -432,7 +432,7 @@
 
     } catch (e) {
       console.error(e);
-      showError();
+      showError(e.message || String(e));
     }
   }
 
@@ -468,9 +468,15 @@
     }
   }
 
-  function showError() {
+  function showError(detail) {
     document.getElementById('skeleton-loader').style.display = 'none';
-    document.getElementById('error-state').style.display = 'block';
+    const errEl = document.getElementById('error-state');
+    const id = new URLSearchParams(window.location.search).get('id');
+    if (detail || !id) {
+      const msg = !id ? '未指定文章 ID（请从首页点击文章进入）' : detail;
+      errEl.querySelector('p').textContent = msg;
+    }
+    errEl.style.display = 'block';
   }
 
   if (typeof renderNav === 'function') renderNav();
