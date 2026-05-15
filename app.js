@@ -396,7 +396,7 @@ function articleThumbnailSVG(article) {
   const fs = mainLabel.length>8?26:mainLabel.length>5?34:44;
   const my = subLabel ? 85 : 92;
   const catLabel = (_CAT_THEMES[cat]||_CAT_THEMES['Daily Brief']).label;
-  return `<svg viewBox="0 0 400 180" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" style="display:block;" preserveAspectRatio="xMidYMid slice">
+  return `<svg viewBox="0 0 400 180" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" style="display:block;" preserveAspectRatio="none">
 <defs><linearGradient id="bg${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="${theme.g1}"/><stop offset="100%" stop-color="${theme.g2}"/></linearGradient>
 <linearGradient id="fd${uid}" x1="0%" y1="40%" x2="0%" y2="100%"><stop offset="0%" stop-color="${theme.g2}" stop-opacity="0"/><stop offset="100%" stop-color="${theme.g1}" stop-opacity="0.8"/></linearGradient></defs>
 <rect width="400" height="180" fill="url(#bg${uid})"/>

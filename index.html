@@ -169,7 +169,7 @@ function generateThumbnailSVG(article, big) {
   // Decorative circle accent top-right
   const circleR = big ? 90 : 55;
 
-  return `<svg viewBox="0 0 400 ${h}" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" style="display:block;" preserveAspectRatio="xMidYMid slice">
+  return `<svg viewBox="0 0 400 ${h}" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" style="display:block;" preserveAspectRatio="none">
   <defs>
     <linearGradient id="bg${uid}" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="${theme.g1}"/>
