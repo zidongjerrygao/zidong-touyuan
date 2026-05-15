@@ -1,0 +1,15 @@
+{
+  "cleanUrls": false,
+  "rewrites": [
+    { "source": "/article",         "destination": "/article.html" },
+    { "source": "/strategy",        "destination": "/strategy.html" },
+    { "source": "/trade",           "destination": "/trade.html" },
+    { "source": "/markets",         "destination": "/markets.html" },
+    { "source": "/community",       "destination": "/community.html" },
+    { "source": "/login",           "destination": "/login.html" },
+    { "source": "/admin",           "destination": "/admin.html" },
+    { "source": "/talk-to-pro",     "destination": "/talk-to-pro.html" },
+    { "source": "/payment",         "destination": "/payment.html" },
+    { "source": "/payment-success", "destination": "/payment-success.html" }
+  ]
+}
