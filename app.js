@@ -1,5 +1,4 @@
-const API = "https://moomooinsights-production.up.railway.app";
-window.API = API; // expose as true global so inline scripts can access it
+window.API = "https://moomooinsights-production.up.railway.app";
 
 // ── Auth helpers ──────────────────────────────────────────────────────────────
 function getToken() { return localStorage.getItem("zidong_token"); }
@@ -49,7 +48,7 @@ function getMinutesToNext(minutes) {
     const body = JSON.stringify({ seconds: secs });
     if (sync && navigator.sendBeacon) {
       const blob = new Blob([body], { type: "application/json" });
-      navigator.sendBeacon(`${API}/api/users/reading-time`, blob);
+      navigator.sendBeacon(`${window.API}/api/users/reading-time`, blob);
     } else {
       apiFetch("/api/users/reading-time", { method: "POST", body }).then(updated => {
         if (updated) {
@@ -82,7 +81,7 @@ async function apiFetch(path, options = {}) {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers
   };
-  const res = await fetch(`${API}${path}`, { ...options, headers });
+  const res = await fetch(`${window.API}${path}`, { ...options, headers });
   if (res.status === 204) return null;
   const data = await res.json().catch(() => null);
   if (!res.ok) throw new Error(data?.detail || `HTTP ${res.status}`);
