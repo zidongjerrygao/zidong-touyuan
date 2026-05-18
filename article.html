@@ -400,7 +400,8 @@
       const excerpt = content.excerpt_zh_cn || content.excerpt || data.excerpt || '';
       let bodyHtml = (content.content_html_zh_cn || content.content_html || data.content_html || '').trim();
       bodyHtml = bodyHtml.replace(/^```[a-z]*\s*/i, '').replace(/\s*```$/i, '');
-      const author = xlAuthor(data.author || content.author || '');
+      const _rawCat = data.category || content.category || '';
+      const author = _rawCat === 'Earnings' ? '财报信鸽' : xlAuthor(data.author || content.author || '');
       const category = xlCategory(data.category || content.category || '');
       const dateStr = formatDate(data.created_at || data.published_at || '');
 

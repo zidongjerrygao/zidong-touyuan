@@ -453,7 +453,7 @@ ${subLabel?`<text x="200" y="${my+fs*0.68}" font-family="system-ui,sans-serif" f
 function articleCardHTML(a) {
   const title    = a.title_zh_cn   || a.title   || "";
   const excerpt  = a.excerpt_zh_cn || a.excerpt || "";
-  const author   = translateAuthor(a.author || "竑睿投研");
+  const author   = a.category === "Earnings" ? "财报信鸽" : translateAuthor(a.author || "竑睿投研");
   const catLabel = translateCategory(a.category || "Market Analysis");
 
   return `
