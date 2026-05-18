@@ -117,7 +117,7 @@ function renderNav() {
       `<a href="${l.href}" class="${page === l.href ? "active" : ""}">${l.label}</a>`
     ).join("");
     if (user?.is_admin) {
-      navLinks.innerHTML += `<a href="admin.html" class="${page === "admin.html" ? "active" : ""}">管理</a>`;
+      navLinks.innerHTML += `<a href="/admin.html" class="${page === "admin.html" ? "active" : ""}">管理</a>`;
     }
     // Close mobile nav on link click
     navLinks.querySelectorAll("a").forEach(a => a.addEventListener("click", () => navLinks.classList.remove("open")));
@@ -277,6 +277,23 @@ async function loadTickerBar(container) {
   }
 }
 
+function trimSvgViewBoxes(container) {
+  const root = container || document;
+  root.querySelectorAll('.chart-block svg, .bar-chart svg').forEach(svg => {
+    try {
+      const vb = svg.getAttribute('viewBox');
+      if (!vb) return;
+      const parts = vb.trim().split(/[\s,]+/).map(Number);
+      if (parts.length !== 4 || parts.some(isNaN)) return;
+      const [vx, vy, vw, vh] = parts;
+      const bbox = svg.getBBox();
+      if (!bbox || !bbox.width) return;
+      const trimmedW = Math.ceil(bbox.x + bbox.width + 18);
+      if (trimmedW < vw - 25) svg.setAttribute('viewBox', `${vx} ${vy} ${trimmedW} ${vh}`);
+    } catch (_) {}
+  });
+}
+
 function formatPrice(price, symbol) {
   if (!price) return "-";
   if (symbol === "USDSGD") return price.toFixed(4);
@@ -349,9 +366,11 @@ function translateAuthor(author) {
     "Trader Moo":                        "交易大师",
     "Macro Moo":                         "宏观大牛",
     "Equity Moo":                        "证券分析师",
+    "Credit Moo":                        "债券分析师",
     "Moomoo Insights":                   "竑睿投研",
-    "Moomoo Research Team":              "紫东研究团队",
-    "Moomoo Investment Research Team":   "竑睿投研团队",
+    "Moomoo Investment Research":        "金融学者",
+    "Moomoo Investment Research Team":   "金融学者",
+    "Moomoo Research Team":              "金融学者",
     "Moomoo Investment Strategy Team":   "竑睿投研团队",
   };
   return map[author] || author;
