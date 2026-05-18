@@ -6,8 +6,8 @@
   <title>市场行情 — 竑睿投研</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20260515" />
-  <script src="app.js?v=20260515" defer></script>
+  <link rel="stylesheet" href="style.css?v=20260515c" />
+  <script src="app.js?v=20260515b" defer></script>
   <style>
     .mover-up { color: #16a34a; font-weight: 700; }
     .mover-dn { color: #dc2626; font-weight: 700; }
@@ -82,11 +82,12 @@
 
   <!-- 财报日历 -->
   <div class="section-head" style="margin-bottom:12px;">
-    <h3 style="font-size:16px;font-weight:700;color:var(--text);">财报日历</h3>
+    <h3 style="font-size:16px;font-weight:700;color:var(--text);">即将公布财报</h3>
     <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-      <button class="earn-filter active" data-filter="all" onclick="setEarnFilter(this,'all')">全部</button>
-      <button class="earn-filter" data-filter="reported" onclick="setEarnFilter(this,'reported')">已公布</button>
-      <button class="earn-filter" data-filter="upcoming" onclick="setEarnFilter(this,'upcoming')">待公布</button>
+      <button class="earn-filter active" data-days="7" onclick="setEarnFilter(this)">未来7天</button>
+      <button class="earn-filter" data-days="14" onclick="setEarnFilter(this)">未来14天</button>
+      <button class="earn-filter" data-days="30" onclick="setEarnFilter(this)">未来30天</button>
+      <button class="earn-filter" data-days="0" onclick="setEarnFilter(this)">全部待公布</button>
     </div>
   </div>
   <div class="card">
@@ -94,18 +95,14 @@
       <table>
         <thead>
           <tr>
-            <th>股票代码</th>
-            <th>公司名称</th>
-            <th>财报日期</th>
-            <th>EPS预期</th>
-            <th>EPS实际</th>
-            <th>超预期</th>
-            <th>营收</th>
-            <th>股价反应</th>
+            <th>日期</th>
+            <th>代码</th>
+            <th>公司</th>
+            <th>板块</th>
           </tr>
         </thead>
         <tbody id="earnings-body">
-          <tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-muted);">加载中…</td></tr>
+          <tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted);">加载中…</td></tr>
         </tbody>
       </table>
     </div>
@@ -134,21 +131,6 @@ function formatPrice(price, symbol) {
   return price.toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function formatRev(v) {
-  if (!v) return "—";
-  if (v >= 1e12) return `$${(v / 1e12).toFixed(2)}万亿`;
-  if (v >= 1e9)  return `$${(v / 1e9).toFixed(2)}十亿`;
-  if (v >= 1e6)  return `$${(v / 1e6).toFixed(0)}百万`;
-  return `$${v.toFixed(0)}`;
-}
-
-function beatPill(pct) {
-  if (pct == null) return `<span class="beat-pill beat-neu">待公布</span>`;
-  const cls = pct >= 0 ? "beat-pos" : "beat-neg";
-  const label = pct >= 0 ? "超预期" : "不及预期";
-  const sign = pct >= 0 ? "+" : "";
-  return `<span class="beat-pill ${cls}">${label} ${sign}${pct.toFixed(1)}%</span>`;
-}
 
 function dayLabel(dateStr) {
   const days = ["周日","周一","周二","周三","周四","周五","周六"];
@@ -210,57 +192,40 @@ async function loadMarkets() {
   }
 }
 
-let _earnFilter = "all";
-let _allEarnings = [];
+let _earnDays = 7;
 
-function setEarnFilter(btn, filter) {
+function setEarnFilter(btn) {
   document.querySelectorAll(".earn-filter").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
-  _earnFilter = filter;
-  renderEarnings();
-}
-
-function renderEarnings() {
-  const tbody = document.getElementById("earnings-body");
-  let data = _allEarnings;
-
-  if (_earnFilter === "reported") {
-    data = data.filter(r => r.eps_actual != null);
-  } else if (_earnFilter === "upcoming") {
-    data = data.filter(r => r.eps_actual == null);
-  }
-
-  if (!data.length) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-muted);">暂无财报数据</td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = data.slice(0, 40).map(r => {
-    const priceReact = r.price_reaction != null
-      ? `<span class="${r.price_reaction >= 0 ? 'mover-up' : 'mover-dn'}">${r.price_reaction >= 0 ? "+" : ""}${r.price_reaction.toFixed(2)}%</span>`
-      : "—";
-    return `<tr class="earnings-row">
-      <td><strong>${r.ticker}</strong></td>
-      <td>${r.name || "—"}</td>
-      <td>${r.report_date ? dayLabel(r.report_date) : "—"}</td>
-      <td>${r.eps_estimate != null ? r.eps_estimate.toFixed(2) : "—"}</td>
-      <td>${r.eps_actual != null ? r.eps_actual.toFixed(2) : "—"}</td>
-      <td>${beatPill(r.eps_surprise_pct)}</td>
-      <td>${formatRev(r.revenue_actual || r.revenue_estimate)}</td>
-      <td>${priceReact}</td>
-    </tr>`;
-  }).join("");
+  _earnDays = parseInt(btn.dataset.days);
+  loadEarnings();
 }
 
 async function loadEarnings() {
   const tbody = document.getElementById("earnings-body");
-  tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-muted);">加载中…</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted);">加载中…</td></tr>`;
   try {
-    const data = await fetch(`${API}/api/earnings`).then(r => r.json());
-    _allEarnings = Array.isArray(data) ? data : (data.items || data.earnings || []);
-    renderEarnings();
+    const today = new Date();
+    let url = `${API}/api/earnings?upcoming=true`;
+    if (_earnDays > 0) {
+      const to = new Date(today);
+      to.setDate(to.getDate() + _earnDays);
+      url += `&to_date=${to.toISOString().slice(0, 10)}`;
+    }
+    const data = await fetch(url).then(r => r.json());
+    const rows = Array.isArray(data) ? data : (data.items || data.earnings || []);
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted);">暂无即将公布的财报数据</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = rows.slice(0, 30).map(r => `<tr class="earnings-row">
+      <td>${dayLabel(r.report_date)}</td>
+      <td><strong>${r.ticker}</strong></td>
+      <td>${r.name || "—"}</td>
+      <td><span class="tag">${r.sector || "—"}</span></td>
+    </tr>`).join("");
   } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-muted);">无法加载财报数据：${e.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted);">无法加载财报数据：${e.message}</td></tr>`;
   }
 }
 

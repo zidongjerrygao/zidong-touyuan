@@ -6,8 +6,8 @@
   <title>竑睿投研 — 专业投研平台</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20260515" />
-  <script src="app.js?v=20260515" defer></script>
+  <link rel="stylesheet" href="style.css?v=20260515c" />
+  <script src="app.js?v=20260515b" defer></script>
   <style>
     .section-label {
       font-size: 11px;
@@ -54,7 +54,13 @@ async function zdFetch(path) {
 function translateAuthor(author) {
   const map = {
     "Moomoo Insights": "投研团队",
+    "Moomoo Investment Research": "金融学者",
+    "Moomoo Investment Research Team": "金融学者",
+    "Moomoo Research Team": "金融学者",
     "Trader Moo": "交易大师",
+    "Macro Moo": "宏观大牛",
+    "Equity Moo": "证券分析师",
+    "Credit Moo": "债券分析师",
     "Madison": "麦迪逊",
     "Cembalest": "策略师",
     "DBS CIO": "星展首席投资官",
@@ -238,8 +244,7 @@ async function loadPage() {
 
     const dailyBriefs    = articles.filter(a => a.category === "Daily Brief");
     const earningsArts   = articles.filter(a => a.category === "Earnings");
-    const marketAnalysis = articles.filter(a => ["Market Analysis","Macro","Equity","Credit"].includes(a.category));
-    const tradePlans     = articles.filter(a => ["TSLA","NVDA"].includes(a.category));
+    const marketAnalysis = articles.filter(a => a.category === "Market Analysis");
 
     // Featured = most recently published across dailyBriefs, earningsArts, marketAnalysis
     const candidates = [...dailyBriefs, ...earningsArts, ...marketAnalysis];
@@ -313,17 +318,7 @@ async function loadPage() {
     }
     html += `</div>`;
 
-    // ── Section 4: 交易计划 ────────────────────────────────────────
-    html += `<hr class="section-divider">`;
-    html += `<div class="news-section">`;
-    html += `<div class="section-label">Trade Plans</div>`;
-    html += `<div class="section-head" style="margin-bottom:20px;"><h2>交易计划</h2></div>`;
-    if (tradePlans.length) {
-      html += `<div class="grid-3">${tradePlans.slice(0, 6).map(articleCardHTML).join("")}</div>`;
-    } else {
-      html += `<div class="empty-state" style="padding:24px 0;"><p>每个交易日下午5时（香港时间）发布 TSLA 及 NVDA 交易计划。</p></div>`;
-    }
-    html += `</div>`;
+    // Trade Plans are shown on /trade page only, not on homepage
 
     main.innerHTML = html;
   } catch (e) {
